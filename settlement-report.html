@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>结算报表 - 操盘系统</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #1c2128;
+      --bg-hover: #21262d;
+      --bg-card: #1a1f26;
+      --border: #30363d;
+      --border-light: #3d444d;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent-blue: #58a6ff;
+      --accent-cyan: #39d353;
+      --accent-green: #3fb950;
+      --accent-red: #f85149;
+      --accent-orange: #d29922;
+      --accent-purple: #a371f7;
+      --accent-yellow: #f0c000;
+      --sidebar-width: 220px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', Helvetica, Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* ========== 顶部导航栏 ========== */
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      z-index: 100;
+    }
+
+    .top-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-right: 24px;
+      border-right: 1px solid var(--border);
+      margin-right: 8px;
+      text-decoration: none;
+    }
+
+    .top-nav-logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .top-nav-logo-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+    }
+
+    .top-nav-menu {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      gap: 4px;
+    }
+
+    .top-nav-item {
+      padding: 8px 12px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+
+    .top-nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .top-nav-item.active {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .top-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+      padding-left: 16px;
+      border-left: 1px solid var(--border);
+    }
+
+    .top-nav-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .top-nav-avatar {
+      width: 28px;
+      height: 28px;
+      background: var(--accent-purple);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #fff;
+    }
+
+    .top-nav-username {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* ========== 主布局 ========== */
+    .page-container {
+      display: flex;
+      padding-top: 48px;
+      min-height: 100vh;
+    }
+
+    /* ========== 左侧筛选栏 ========== */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 48px;
+      left: 0;
+      bottom: 0;
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+
+    .sidebar-section {
+      padding: 0 12px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 8px 12px;
+    }
+
+    .filter-group {
+      margin-bottom: 4px;
+    }
+
+    .filter-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--text-secondary);
+    }
+
+    .filter-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .filter-item.active {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .filter-radio {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border-light);
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .filter-item.active .filter-radio {
+      border-color: var(--accent-blue);
+    }
+
+    .filter-item.active .filter-radio::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 6px;
+      height: 6px;
+      background: var(--accent-blue);
+      border-radius: 50%;
+    }
+
+    /* 日期筛选 */
+    .date-filter {
+      padding: 8px;
+    }
+
+    .date-input-group {
+      margin-bottom: 10px;
+    }
+
+    .date-label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .date-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .date-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .date-shortcuts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .date-shortcut {
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .date-shortcut:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .date-shortcut.active {
+      background: rgba(88, 166, 255, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    /* ========== 主内容区 ========== */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 20px;
+    }
+
+    /* ========== 页面标题 ========== */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .page-title h1 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .page-title-icon {
+      font-size: 24px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ========== 统计概览卡片 ========== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+
+    .stat-card-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .stat-card-value {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .stat-card-value.profit {
+      color: var(--accent-blue);
+    }
+
+    .stat-card-value.payout {
+      color: var(--accent-green);
+    }
+
+    .stat-card-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ========== 筛选工具栏 ========== */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      padding: 8px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .search-box {
+      padding: 8px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 13px;
+      width: 200px;
+    }
+
+    .search-box:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #4c96eb;
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+    }
+
+    .btn-success {
+      background: var(--accent-green);
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      background: #36a148;
+    }
+
+    /* ========== 报表表格 ========== */
+    .report-table-container {
+      background: var(--bg-card);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .report-table-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .report-table-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .report-table-scroll {
+      overflow-x: auto;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 1400px;
+    }
+
+    .report-table thead tr {
+      background: var(--bg-tertiary);
+    }
+
+    .report-table th {
+      padding: 12px 12px;
+      text-align: left;
+      font-weight: 500;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .report-table th.text-center {
+      text-align: center;
+    }
+
+    .report-table th.text-right {
+      text-align: right;
+    }
+
+    .report-table td {
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .report-table tbody tr:hover {
+      background: var(--bg-hover);
+    }
+
+    .report-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .report-table tfoot tr {
+      background: var(--bg-tertiary);
+      font-weight: 600;
+    }
+
+    .report-table tfoot td {
+      padding: 12px 12px;
+      border-bottom: none;
+    }
+
+    /* 赛事详情单元格 */
+    .match-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .match-cell-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .league-tag {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .league-tag.premier { background: rgba(88, 166, 255, 0.15); color: var(--accent-blue); }
+    .league-tag.laliga { background: rgba(248, 81, 73, 0.15); color: var(--accent-red); }
+    .league-tag.seriea { background: rgba(163, 113, 247, 0.15); color: var(--accent-purple); }
+    .league-tag.bundesliga { background: rgba(210, 153, 34, 0.15); color: var(--accent-orange); }
+
+    .match-teams {
+      font-weight: 500;
+    }
+
+    .match-score {
+      font-weight: 600;
+      color: var(--accent-green);
+    }
+
+    .match-score.abnormal {
+      color: var(--accent-orange);
+    }
+
+    .match-cell-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .source-tag {
+      color: var(--accent-green);
+    }
+
+    .source-tag.self {
+      color: var(--accent-purple);
+    }
+
+    .source-tag.abnormal {
+      color: var(--accent-orange);
+    }
+
+    /* 结算状态标签 */
+    .status-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .status-tag.settled {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--accent-green);
+    }
+
+    .status-tag.cancelled {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    /* 注单类型分组 */
+    .bet-type-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .bet-type-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .bet-type-label {
+      width: 36px;
+      color: var(--text-muted);
+    }
+
+    .bet-type-value {
+      font-weight: 500;
+    }
+
+    .bet-type-value.single {
+      color: var(--accent-blue);
+    }
+
+    .bet-type-value.parlay {
+      color: var(--accent-purple);
+    }
+
+    /* 数值样式 */
+    .text-center {
+      text-align: center;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .text-profit {
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    .text-loss {
+      color: var(--accent-red);
+      font-weight: 600;
+    }
+
+    .text-payout {
+      color: var(--accent-green);
+      font-weight: 500;
+    }
+
+    .text-muted {
+      color: var(--text-muted);
+    }
+
+    .text-small {
+      font-size: 12px;
+    }
+
+    /* 操作按钮 */
+    .action-btn {
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .action-btn:hover {
+      background: var(--bg-hover);
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    /* 分页 */
+    .pagination {
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .pagination-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .pagination-btn {
+      padding: 4px 12px;
+      font-size: 12px;
+    }
+
+    /* 日期范围输入 */
+    .date-range-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .date-range-input {
+      padding: 8px 10px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .date-range-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .date-range-sep {
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 顶部导航栏 -->
+  <nav class="top-nav">
+    <a class="top-nav-logo" href="index.html">
+      <div class="top-nav-logo-icon">T</div>
+      <span class="top-nav-logo-text">操盘系统</span>
+    </a>
+    <div class="top-nav-menu">
+      <a class="top-nav-item" href="league-management.html">联赛管理</a>
+      <a class="top-nav-item" href="trading-list.html">操盘列表</a>
+      <a class="top-nav-item" href="Trading-Detail.html">操盘详情</a>
+      <a class="top-nav-item" href="risk-management.html">风控管理</a>
+      <a class="top-nav-item" href="settlement-list.html">结算管理</a>
+      <a class="top-nav-item" href="settlement-detail.html">结算详情</a>
+      <a class="top-nav-item active" href="settlement-report.html">结算报表</a>
+    </div>
+    <div class="top-nav-right">
+      <div class="top-nav-user">
+        <div class="top-nav-avatar">张</div>
+        <span class="top-nav-username">张三</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 本期范围声明横幅（2026-04-21） -->
+  <div style="position:fixed;top:48px;left:0;right:0;z-index:99;background:linear-gradient(90deg,rgba(248,81,73,0.14),rgba(248,81,73,0.06));border-bottom:1px solid rgba(248,81,73,0.4);padding:10px 20px;font-size:13px;color:#f85149;line-height:1.6;text-align:center;">
+    <strong style="margin-right:6px;">🚧 本模块本期不进入功能范围</strong>
+    一期结算完成的数据由<strong>结算详情页</strong>与<strong>结算管理</strong>模块内直接留存与审计查询；本模块作为后续独立迭代项目，原型展示仅作设计预览，<strong>不作为一期开发对接依据</strong>。
+  </div>
+  <style>.page-container { padding-top: 96px !important; } .sidebar { top: 96px !important; }</style>
+
+  <div class="page-container">
+    <!-- 左侧筛选栏 -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">时间范围</div>
+        <div class="date-filter">
+          <div class="date-input-group">
+            <label class="date-label">开始日期</label>
+            <input type="date" class="date-input" value="2026-01-30">
+          </div>
+          <div class="date-input-group">
+            <label class="date-label">结束日期</label>
+            <input type="date" class="date-input" value="2026-01-30">
+          </div>
+          <div class="date-shortcuts">
+            <button class="date-shortcut active">今天</button>
+            <button class="date-shortcut">昨天</button>
+            <button class="date-shortcut">本周</button>
+            <button class="date-shortcut">本月</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">结算来源</div>
+        <div class="filter-group">
+          <div class="filter-item active" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>全部</span>
+          </div>
+          <div class="filter-item" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>数据源结算</span>
+          </div>
+          <div class="filter-item" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>本地结算</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">结算状态</div>
+        <div class="filter-group">
+          <div class="filter-item active" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>全部</span>
+          </div>
+          <div class="filter-item" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>已结算</span>
+          </div>
+          <div class="filter-item" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>已取消</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">结算人员</div>
+        <div class="filter-group">
+          <div class="filter-item active" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>全部</span>
+          </div>
+          <div class="filter-item" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>张三</span>
+          </div>
+          <div class="filter-item" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>李四</span>
+          </div>
+          <div class="filter-item" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>王五</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">运动类型</div>
+        <div class="filter-group">
+          <div class="filter-item active" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>全部</span>
+          </div>
+          <div class="filter-item" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>足球</span>
+          </div>
+          <div class="filter-item" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>篮球</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">盈亏筛选</div>
+        <div class="filter-group">
+          <div class="filter-item active" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>全部</span>
+          </div>
+          <div class="filter-item" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>盈利赛事</span>
+          </div>
+          <div class="filter-item" onclick="selectFilter(this)">
+            <span class="filter-radio"></span>
+            <span>亏损赛事</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <!-- 页面标题 -->
+      <div class="page-header">
+        <div class="page-title">
+          <span class="page-title-icon">📊</span>
+          <h1>结算报表</h1>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="exportReport('csv')">导出 CSV</button>
+          <button class="btn btn-secondary" onclick="exportReport('excel')">导出 Excel</button>
+          <button class="btn btn-primary" onclick="refreshReport()">刷新数据</button>
+        </div>
+      </div>
+
+      <!-- 统计概览 -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-label">结算赛事数</div>
+          <div class="stat-card-value">32</div>
+          <div class="stat-card-sub">较昨日 +5</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">总注单数</div>
+          <div class="stat-card-value">1,256</div>
+          <div class="stat-card-sub">单关 980 / 串关 276</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">总投注额</div>
+          <div class="stat-card-value">¥8.2M</div>
+          <div class="stat-card-sub">较昨日 +12%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">总派彩额</div>
+          <div class="stat-card-value payout">¥6.8M</div>
+          <div class="stat-card-sub">实际RTP 82.9%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">平台盈亏</div>
+          <div class="stat-card-value profit">+¥1.4M</div>
+          <div class="stat-card-sub">盈利率 17.1%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">投注人数</div>
+          <div class="stat-card-value">537</div>
+          <div class="stat-card-sub">人均投注 ¥15.3K</div>
+        </div>
+      </div>
+
+      <!-- 筛选工具栏 -->
+      <div class="toolbar">
+        <select class="filter-select">
+          <option>全部联赛</option>
+          <option>英超</option>
+          <option>西甲</option>
+          <option>意甲</option>
+          <option>德甲</option>
+          <option>法甲</option>
+        </select>
+        <input type="text" class="search-box" placeholder="搜索赛事ID或球队名...">
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <select class="filter-select">
+            <option>按开赛时间排序</option>
+            <option>按结算时间排序</option>
+            <option>按投注额排序</option>
+            <option>按盈亏排序</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 报表表格 -->
+      <div class="report-table-container">
+        <div class="report-table-header">
+          <div class="report-table-title">赛事结算明细</div>
+          <div style="font-size:12px;color:var(--text-muted);">
+            统计周期：2026-01-30 00:00:00 ~ 2026-01-30 23:59:59
+          </div>
+        </div>
+        <div class="report-table-scroll">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th style="min-width:220px;">赛事详情</th>
+                <th class="text-center" style="width:70px;">结算状态</th>
+                <th class="text-center" style="width:60px;">盘口数</th>
+                <th class="text-center" style="width:120px;">注单数</th>
+                <th class="text-center" style="width:70px;">投注人数</th>
+                <th class="text-right" style="width:100px;">投注额</th>
+                <th class="text-right" style="width:100px;">派彩额</th>
+                <th class="text-right" style="width:100px;">盈亏</th>
+                <th class="text-center" style="width:70px;">盈利率</th>
+                <th class="text-center" style="width:80px;">结算人员</th>
+                <th class="text-center" style="width:130px;">开赛时间</th>
+                <th class="text-center" style="width:130px;">结算时间</th>
+                <th class="text-center" style="width:80px;">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="match-cell">
+                    <div class="match-cell-main">
+                      <span class="league-tag premier">英超</span>
+                      <span class="match-teams">曼联 vs 利物浦</span>
+                      <span class="match-score">2-1</span>
+                    </div>
+                    <div class="match-cell-sub">ID: M20260130001 · <span class="source-tag">数据源结算</span></div>
+                  </div>
+                </td>
+                <td class="text-center"><span class="status-tag settled">已结算</span></td>
+                <td class="text-center">12</td>
+                <td class="text-center">
+                  <div class="bet-type-group">
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">单关</span>
+                      <span class="bet-type-value single">132</span>
+                    </div>
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">串关</span>
+                      <span class="bet-type-value parlay">24</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">89</td>
+                <td class="text-right">¥1,256,000</td>
+                <td class="text-right text-payout">¥892,000</td>
+                <td class="text-right text-profit">+¥364,000</td>
+                <td class="text-center text-profit">28.9%</td>
+                <td class="text-center">张三</td>
+                <td class="text-center text-small">2026-01-30 20:00</td>
+                <td class="text-center text-small">2026-01-30 22:05</td>
+                <td class="text-center">
+                  <button class="action-btn" onclick="viewBetRecords('M20260130001')">注单记录</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="match-cell">
+                    <div class="match-cell-main">
+                      <span class="league-tag laliga">西甲</span>
+                      <span class="match-teams">皇马 vs 巴萨</span>
+                      <span class="match-score">3-2</span>
+                    </div>
+                    <div class="match-cell-sub">ID: M20260130002 · <span class="source-tag">数据源结算</span></div>
+                  </div>
+                </td>
+                <td class="text-center"><span class="status-tag settled">已结算</span></td>
+                <td class="text-center">12</td>
+                <td class="text-center">
+                  <div class="bet-type-group">
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">单关</span>
+                      <span class="bet-type-value single">285</span>
+                    </div>
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">串关</span>
+                      <span class="bet-type-value parlay">43</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">156</td>
+                <td class="text-right">¥2,850,000</td>
+                <td class="text-right text-payout">¥3,120,000</td>
+                <td class="text-right text-loss">-¥270,000</td>
+                <td class="text-center text-loss">-9.5%</td>
+                <td class="text-center">李四</td>
+                <td class="text-center text-small">2026-01-30 21:00</td>
+                <td class="text-center text-small">2026-01-30 23:12</td>
+                <td class="text-center">
+                  <button class="action-btn" onclick="viewBetRecords('M20260130002')">注单记录</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="match-cell">
+                    <div class="match-cell-main">
+                      <span class="league-tag seriea">意甲</span>
+                      <span class="match-teams">国米 vs AC米兰</span>
+                      <span class="match-score abnormal">腰斩</span>
+                    </div>
+                    <div class="match-cell-sub">ID: M20260130003 · <span class="source-tag">本地结算</span></div>
+                  </div>
+                </td>
+                <td class="text-center"><span class="status-tag cancelled">已取消</span></td>
+                <td class="text-center">10</td>
+                <td class="text-center">
+                  <div class="bet-type-group">
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">单关</span>
+                      <span class="bet-type-value single">82</span>
+                    </div>
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">串关</span>
+                      <span class="bet-type-value parlay">16</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">67</td>
+                <td class="text-right">¥856,000</td>
+                <td class="text-right" style="color:var(--accent-orange);">¥856,000</td>
+                <td class="text-right text-muted">¥0</td>
+                <td class="text-center text-muted">0%</td>
+                <td class="text-center">张三</td>
+                <td class="text-center text-small">2026-01-30 19:30</td>
+                <td class="text-center text-small">2026-01-30 20:45</td>
+                <td class="text-center">
+                  <button class="action-btn" onclick="viewBetRecords('M20260130003')">注单记录</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="match-cell">
+                    <div class="match-cell-main">
+                      <span class="league-tag bundesliga">德甲</span>
+                      <span class="match-teams">拜仁 vs 多特</span>
+                      <span class="match-score">4-0</span>
+                    </div>
+                    <div class="match-cell-sub">ID: M20260130004 · <span class="source-tag self">本地结算</span></div>
+                  </div>
+                </td>
+                <td class="text-center"><span class="status-tag settled">已结算</span></td>
+                <td class="text-center">8</td>
+                <td class="text-center">
+                  <div class="bet-type-group">
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">单关</span>
+                      <span class="bet-type-value single">72</span>
+                    </div>
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">串关</span>
+                      <span class="bet-type-value parlay">14</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">52</td>
+                <td class="text-right">¥680,000</td>
+                <td class="text-right text-payout">¥420,000</td>
+                <td class="text-right text-profit">+¥260,000</td>
+                <td class="text-center text-profit">38.2%</td>
+                <td class="text-center">王五</td>
+                <td class="text-center text-small">2026-01-30 18:30</td>
+                <td class="text-center text-small">2026-01-30 20:38</td>
+                <td class="text-center">
+                  <button class="action-btn" onclick="viewBetRecords('M20260130004')">注单记录</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="match-cell">
+                    <div class="match-cell-main">
+                      <span class="league-tag premier">英超</span>
+                      <span class="match-teams">切尔西 vs 阿森纳</span>
+                      <span class="match-score">1-1</span>
+                    </div>
+                    <div class="match-cell-sub">ID: M20260130005 · <span class="source-tag">数据源结算</span></div>
+                  </div>
+                </td>
+                <td class="text-center"><span class="status-tag settled">已结算</span></td>
+                <td class="text-center">12</td>
+                <td class="text-center">
+                  <div class="bet-type-group">
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">单关</span>
+                      <span class="bet-type-value single">198</span>
+                    </div>
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">串关</span>
+                      <span class="bet-type-value parlay">47</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">128</td>
+                <td class="text-right">¥1,680,000</td>
+                <td class="text-right text-payout">¥1,520,000</td>
+                <td class="text-right text-profit">+¥160,000</td>
+                <td class="text-center text-profit">9.5%</td>
+                <td class="text-center">李四</td>
+                <td class="text-center text-small">2026-01-30 22:00</td>
+                <td class="text-center text-small">2026-01-31 00:08</td>
+                <td class="text-center">
+                  <button class="action-btn" onclick="viewBetRecords('M20260130005')">注单记录</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="match-cell">
+                    <div class="match-cell-main">
+                      <span class="league-tag seriea">意甲</span>
+                      <span class="match-teams">尤文 vs 那不勒斯</span>
+                      <span class="match-score">2-2</span>
+                    </div>
+                    <div class="match-cell-sub">ID: M20260130006 · <span class="source-tag self">本地结算</span></div>
+                  </div>
+                </td>
+                <td class="text-center"><span class="status-tag settled">已结算</span></td>
+                <td class="text-center">6</td>
+                <td class="text-center">
+                  <div class="bet-type-group">
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">单关</span>
+                      <span class="bet-type-value single">56</span>
+                    </div>
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">串关</span>
+                      <span class="bet-type-value parlay">12</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">45</td>
+                <td class="text-right">¥328,000</td>
+                <td class="text-right text-payout">¥285,000</td>
+                <td class="text-right text-profit">+¥43,000</td>
+                <td class="text-center text-profit">13.1%</td>
+                <td class="text-center">张三</td>
+                <td class="text-center text-small">2026-01-30 17:00</td>
+                <td class="text-center text-small">2026-01-30 19:15</td>
+                <td class="text-center">
+                  <button class="action-btn" onclick="viewBetRecords('M20260130006')">注单记录</button>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>合计（6场赛事）</td>
+                <td class="text-center">-</td>
+                <td class="text-center">60</td>
+                <td class="text-center">
+                  <div class="bet-type-group">
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">单关</span>
+                      <span class="bet-type-value">825</span>
+                    </div>
+                    <div class="bet-type-row">
+                      <span class="bet-type-label">串关</span>
+                      <span class="bet-type-value">156</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">537</td>
+                <td class="text-right">¥7,650,000</td>
+                <td class="text-right text-payout">¥7,093,000</td>
+                <td class="text-right text-profit">+¥557,000</td>
+                <td class="text-center text-profit">7.3%</td>
+                <td class="text-center">-</td>
+                <td class="text-center">-</td>
+                <td class="text-center">-</td>
+                <td class="text-center">-</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="pagination">
+          <div class="pagination-info">
+            <span>共 32 场赛事</span>
+            <span>|</span>
+            <span>显示 1-6 条</span>
+          </div>
+          <div class="pagination-controls">
+            <button class="btn btn-secondary pagination-btn" disabled>上一页</button>
+            <span style="padding:0 8px;">1 / 6</span>
+            <button class="btn btn-secondary pagination-btn">下一页</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // 筛选项选择
+    function selectFilter(item) {
+      const group = item.parentElement;
+      group.querySelectorAll('.filter-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    }
+
+    // 日期快捷方式
+    document.querySelectorAll('.date-shortcut').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.date-shortcut').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // 查看注单记录 - 带入赛事ID跳转
+    function viewBetRecords(matchId) {
+      // 跳转到注单记录页面，带上赛事ID参数
+      const url = `bet-records.html?matchId=${matchId}`;
+      console.log('跳转到注单记录:', url);
+      // 实际跳转
+      // window.location.href = url;
+      alert(`跳转到注单记录页面\n赛事ID: ${matchId}\nURL: ${url}`);
+    }
+
+    // 导出报表
+    function exportReport(format) {
+      alert(`导出 ${format.toUpperCase()} 格式报表`);
+    }
+
+    // 刷新数据
+    function refreshReport() {
+      alert('刷新报表数据');
+    }
+  </script>
+</body>
+
+</html>

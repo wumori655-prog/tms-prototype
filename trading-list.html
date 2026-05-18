@@ -1,0 +1,6466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>操盘列表 V10 - Trading Floor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #1c2128;
+      --bg-hover: #21262d;
+      --bg-card: #1a1f26;
+      --border: #30363d;
+      --border-light: #3d444d;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent-blue: #58a6ff;
+      --accent-cyan: #39d353;
+      --accent-green: #3fb950;
+      --accent-red: #f85149;
+      --accent-orange: #d29922;
+      --accent-purple: #a371f7;
+      --accent-yellow: #f0c000;
+      --live-red: #ff4757;
+      --sidebar-width: 240px;
+      --sidebar-collapsed-width: 60px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', Helvetica, Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* ========== 全局水印 ========== */
+    .watermark {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 99999;
+    }
+
+    /* ========== 整体布局: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', Helvetica, Arial, sans-serif; background: var(--bg-primary); color: var(--text-primary); font-size: 13px; line-height: 1.5; }
+        
+        /* ========== 整体布局 ========== */
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* ========== 左侧边栏 - 运动类型树（支持折叠） ========== */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: width 0.3s ease;
+    }
+
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed-width);
+    }
+
+    .sidebar-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 52px;
+    }
+
+    .logo {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      transition: opacity 0.2s, width 0.2s;
+    }
+
+    .sidebar.collapsed .logo-text {
+      opacity: 0;
+      width: 0;
+    }
+
+    /* 折叠按钮 */
+    .collapse-btn {
+      width: 24px;
+      height: 24px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .collapse-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .sidebar.collapsed .collapse-btn {
+      transform: rotate(180deg);
+    }
+
+    /* 数据源状态（仅IM，只读） */
+    .datasource {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .sidebar.collapsed .datasource {
+      padding: 12px 8px;
+    }
+
+    .ds-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      white-space: nowrap;
+    }
+
+    .sidebar.collapsed .ds-title span:last-child {
+      display: none;
+    }
+
+    .ds-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 12px;
+    }
+
+    .sidebar.collapsed .ds-item {
+      justify-content: center;
+    }
+
+    .ds-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar.collapsed .ds-status span:not(.ds-dot) {
+      display: none;
+    }
+
+    .ds-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .ds-dot.online {
+      background: var(--accent-green);
+      box-shadow: 0 0 6px var(--accent-green);
+    }
+
+    .ds-dot.offline {
+      background: var(--accent-red);
+    }
+
+    .ds-dot.maintenance {
+      background: var(--accent-orange);
+    }
+
+    .ds-latency {
+      font-family: ui-monospace, monospace;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .sidebar.collapsed .ds-latency {
+      display: none;
+    }
+
+    .ds-status-label {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .ds-status-label.online {
+      background: rgba(57, 211, 83, 0.15);
+      color: var(--accent-green);
+    }
+
+    .ds-status-label.offline {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .ds-status-label.maintenance {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--accent-orange);
+    }
+
+    .sidebar.collapsed .ds-status-label {
+      display: none;
+    }
+
+    /* 运动类型搜索 */
+    .sidebar-search {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ========== 顶部导航栏 ========== */
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      z-index: 100;
+    }
+
+    .top-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-right: 24px;
+      border-right: 1px solid var(--border);
+      margin-right: 8px;
+    }
+
+    .top-nav-logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .top-nav-logo-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+    }
+
+    .top-nav-menu {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      overflow-x: auto;
+      gap: 4px;
+    }
+
+    .top-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .top-nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .top-nav-item.active {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .top-nav-item-icon {
+      font-size: 14px;
+    }
+
+    .top-nav-item-arrow {
+      font-size: 8px;
+      color: var(--text-muted);
+      margin-left: 2px;
+    }
+
+    .top-nav-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 160px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      padding: 6px 0;
+      z-index: 200;
+      margin-top: 4px;
+    }
+
+    .top-nav-item:hover .top-nav-dropdown {
+      display: block;
+    }
+
+    .top-nav-subitem {
+      display: block;
+      padding: 8px 16px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .top-nav-subitem:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .top-nav-subitem.active {
+      color: var(--accent-blue);
+      background: rgba(88, 166, 255, 0.1);
+    }
+
+    .top-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+      padding-left: 16px;
+      border-left: 1px solid var(--border);
+    }
+
+    .top-nav-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .top-nav-avatar {
+      width: 28px;
+      height: 28px;
+      background: var(--accent-blue);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #fff;
+    }
+
+    .top-nav-username {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* 赔率制式切换 */
+    .odds-format-switcher {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-right: 12px;
+      border-right: 1px solid var(--border);
+    }
+
+    .odds-format-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .odds-format-toggle {
+      display: flex;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      padding: 2px;
+    }
+
+    .odds-format-btn {
+      padding: 4px 8px;
+      font-size: 11px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.15s;
+    }
+
+    .odds-format-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .odds-format-btn.active {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    /* 调整app布局以适应顶部导航 */
+    .app {
+      padding-top: 48px;
+    }
+
+    .sidebar.collapsed .sidebar-search {
+      padding: 8px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .sidebar.collapsed .search-input {
+      padding: 8px;
+      text-indent: -9999px;
+    }
+
+    .search-icon-btn {
+      display: none;
+      width: 100%;
+      height: 36px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .search-icon-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .sidebar.collapsed .search-input {
+      display: none;
+    }
+
+    .sidebar.collapsed .search-icon-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 运动类型树 */
+    .sport-tree {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .sport-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .sidebar.collapsed .sport-item {
+      padding: 10px 8px;
+      justify-content: center;
+    }
+
+    .sport-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .sport-item.active {
+      background: rgba(88, 166, 255, 0.1);
+      border-left: 3px solid var(--accent-blue);
+    }
+
+    .sidebar.collapsed .sport-item.active {
+      border-left: none;
+      border-bottom: 2px solid var(--accent-blue);
+    }
+
+    .sport-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar.collapsed .sport-icon {
+      margin-right: 0;
+    }
+
+    .sport-name {
+      flex: 1;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar.collapsed .sport-name {
+      display: none;
+    }
+
+    .sport-count {
+      background: var(--bg-tertiary);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .sport-count.live {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .sidebar.collapsed .sport-count {
+      display: none;
+    }
+
+    .sport-expand {
+      color: var(--text-muted);
+      font-size: 10px;
+      margin-left: 8px;
+    }
+
+    .sidebar.collapsed .sport-expand {
+      display: none;
+    }
+
+    /* 联赛列表 */
+    .league-list {
+      display: none;
+      background: var(--bg-tertiary);
+    }
+
+    .sport-item.expanded+.league-list {
+      display: block;
+    }
+
+    .sidebar.collapsed .league-list {
+      display: none !important;
+    }
+
+    .league-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px 8px 50px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .league-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .league-item.active {
+      color: var(--accent-blue);
+    }
+
+    .league-flag {
+      margin-right: 8px;
+      font-size: 12px;
+    }
+
+    .league-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .league-count {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* ========== 主内容区 ========== */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    /* 网络状态banner */
+    .network-banner {
+      display: none;
+      padding: 10px 20px;
+      background: rgba(248, 81, 73, 0.15);
+      border-bottom: 1px solid rgba(248, 81, 73, 0.3);
+      color: var(--accent-red);
+      font-size: 12px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .network-banner.active {
+      display: flex;
+    }
+
+    .network-banner .btn {
+      margin-left: auto;
+    }
+
+    /* 顶部栏 */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .page-title {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .timezone {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 400;
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .role-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+
+    .role-badge.admin {
+      background: rgba(163, 113, 247, 0.15);
+      color: var(--accent-purple);
+    }
+
+    .role-badge.trader {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .role-badge.risk {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    /* 统计卡片 */
+    .stats {
+      display: flex;
+      gap: 16px;
+    }
+
+    .stat {
+      background: var(--bg-tertiary);
+      padding: 8px 14px;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 70px;
+    }
+
+    .stat:hover {
+      background: var(--bg-hover);
+      transform: translateY(-1px);
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .stat-value.warn {
+      color: var(--accent-orange);
+    }
+
+    .stat-value.live {
+      color: var(--accent-red);
+    }
+
+    .stat-value.info {
+      color: var(--accent-blue);
+    }
+
+    .stat-value.delay {
+      color: var(--accent-orange);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* 顶部右侧 */
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .server-time {
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--bg-tertiary);
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
+
+    /* 按钮样式 */
+    .btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: var(--accent-red);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #4c9aed;
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+    }
+
+    .btn-danger {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+      border-color: rgba(248, 81, 73, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: rgba(248, 81, 73, 0.25);
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
+    /* ========== 筛选区 ========== */
+    .filter-section {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* 第1行 - 日期筛选 */
+    .filter-row-1 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-tertiary);
+    }
+
+    .date-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .date-btn {
+      padding: 5px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .date-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .date-btn.active {
+      background: var(--accent-blue);
+      color: #fff;
+      border-color: var(--accent-blue);
+    }
+
+    .date-btn.disabled {
+      opacity: 0.5;
+    }
+
+    .filter-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 8px;
+    }
+
+    .date-range {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .date-range-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .date-input {
+      padding: 5px 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-size: 11px;
+      width: 180px;
+    }
+
+    .date-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .date-input.custom-active {
+      border-color: var(--accent-blue);
+      background: rgba(88, 166, 255, 0.1);
+    }
+
+    .date-hint {
+      font-size: 10px;
+      color: var(--accent-blue);
+      display: none;
+    }
+
+    .date-hint.active {
+      display: inline;
+    }
+
+    /* 快捷场景 */
+    .quick-scene {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .quick-btn {
+      padding: 5px 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .quick-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .quick-btn.active {
+      background: rgba(163, 113, 247, 0.15);
+      color: var(--accent-purple);
+      border-color: rgba(163, 113, 247, 0.3);
+    }
+
+    /* 第2行 - 比赛进程Tab */
+    .filter-row-2 {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .phase-tab {
+      padding: 8px 16px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .phase-tab:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .phase-tab.active {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .phase-tab .cnt {
+      background: var(--bg-hover);
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-size: 10px;
+    }
+
+    .phase-tab.live .cnt {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--accent-red);
+    }
+
+    .realtime-tag {
+      font-size: 9px;
+      padding: 1px 4px;
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+      border-radius: 3px;
+    }
+
+    .phase-hint {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .hint-icon {
+      font-size: 12px;
+    }
+
+    /* 第3行 - 赛事状态 + 上架状态（根据V1.4调整，删除取消和腰斩） */
+    .filter-row-3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(30, 35, 42, 0.5);
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .status-group {
+      display: flex;
+      gap: 4px;
+    }
+
+    .status-btn {
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .status-btn:hover {
+      background: var(--bg-hover);
+    }
+
+    .status-btn.active {
+      background: var(--accent-blue);
+      color: #fff;
+      border-color: var(--accent-blue);
+    }
+
+    .status-btn.delay {
+      color: var(--accent-orange);
+      border-color: rgba(210, 153, 34, 0.3);
+    }
+
+    .status-btn.delay.active {
+      background: var(--accent-orange);
+      color: #fff;
+    }
+
+    .status-btn.pending {
+      color: var(--accent-orange);
+    }
+
+    .status-btn .badge {
+      font-size: 9px;
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--accent-red);
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-left: 4px;
+    }
+
+    .group-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 12px;
+    }
+
+    .notification-toggle {
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .notification-toggle:hover {
+      background: var(--bg-hover);
+    }
+
+    .notification-toggle.active {
+      background: rgba(57, 211, 83, 0.1);
+      color: var(--accent-green);
+      border-color: rgba(57, 211, 83, 0.3);
+    }
+
+    /* 第4行 - 其他筛选 */
+    .filter-row-4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      padding: 6px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-size: 11px;
+      cursor: pointer;
+      min-width: 100px;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .search-box {
+      position: relative;
+      margin-left: auto;
+    }
+
+    .search-box input {
+      padding: 6px 12px 6px 30px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-size: 12px;
+      width: 200px;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .search-box::before {
+      content: '🔍';
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+    }
+
+    .sort-select {
+      padding: 6px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-size: 11px;
+    }
+
+    .export-btn {
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .export-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    /* ========== 批量操作栏（底部浮动弹窗样式） ========== */
+    .batch-bar {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-secondary);
+      border: 1px solid var(--accent-blue);
+      border-radius: 12px;
+      padding: 12px 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      align-items: center;
+      gap: 16px;
+      min-width: 600px;
+    }
+
+    .batch-bar.active {
+      display: flex;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateX(-50%) translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .batch-info {
+      font-size: 13px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .batch-count {
+      font-weight: 600;
+      color: var(--accent-blue);
+      font-size: 16px;
+    }
+
+    .batch-actions {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .batch-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+    }
+
+    .batch-close:hover {
+      color: var(--text-primary);
+    }
+
+    /* ========== 数据表格 ========== */
+    .table-container {
+      flex: 1;
+      overflow: auto;
+      padding: 0 20px 80px 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1400px;
+    }
+
+    th {
+      padding: 10px 8px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    th.sortable {
+      cursor: pointer;
+    }
+
+    th.sortable:hover {
+      color: var(--text-primary);
+    }
+
+    .sort-icon {
+      margin-left: 4px;
+      opacity: 0.5;
+    }
+
+    .th-hint {
+      font-weight: 400;
+      color: var(--text-muted);
+      font-size: 9px;
+      text-transform: none;
+    }
+
+    td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      font-size: 11px;
+    }
+
+    tr:hover {
+      background: var(--bg-hover);
+    }
+
+    /* 置顶区分隔 */
+    .table-section-divider {
+      background: rgba(248, 81, 73, 0.2);
+      border-left: 3px solid var(--accent-red);
+    }
+
+    .table-section-divider td {
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-red);
+    }
+
+    /* 联赛分组标题 */
+    .league-group-header {
+      background: var(--bg-tertiary);
+    }
+
+    .league-group-header td {
+      padding: 8px 12px;
+    }
+
+    .league-group-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .league-group-flag {
+      font-size: 14px;
+    }
+
+    .league-group-name {
+      color: var(--text-primary);
+    }
+
+    .league-group-count {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    .league-group-toggle {
+      margin-left: auto;
+      color: var(--text-muted);
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .league-group-toggle:hover {
+      color: var(--accent-blue);
+    }
+
+    /* 行状态样式 */
+    .row-critical {
+      background: rgba(248, 81, 73, 0.15);
+      animation: criticalPulse 2s infinite;
+    }
+
+    @keyframes criticalPulse {
+
+      0%,
+      100% {
+        background: rgba(248, 81, 73, 0.15);
+      }
+
+      50% {
+        background: rgba(248, 81, 73, 0.25);
+      }
+    }
+
+    .row-urgent {
+      background: rgba(248, 81, 73, 0.1);
+    }
+
+    .row-pending {
+      background: rgba(210, 153, 34, 0.08);
+    }
+
+    .row-delay {
+      background: rgba(210, 153, 34, 0.12);
+    }
+
+    .row-alert {
+      background: rgba(210, 153, 34, 0.06);
+    }
+
+    .row-danger {
+      background: rgba(248, 81, 73, 0.08);
+    }
+
+    .row-normal {
+      background: transparent;
+    }
+
+    .row-live {
+      border-left: 3px solid var(--accent-red);
+    }
+
+    .row-prematch {
+      border-left: 3px solid var(--accent-blue);
+    }
+
+    .row-halftime {
+      border-left: 3px solid var(--accent-orange);
+    }
+
+    /* 复选框 */
+    .chk {
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .chk:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .chk.checked {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    .chk.checked::after {
+      content: '✓';
+      color: #fff;
+      font-size: 10px;
+    }
+
+    /* 列宽定义 */
+    .time-cell {
+      width: 90px;
+    }
+
+    .league-cell {
+      width: 130px;
+    }
+
+    .event-cell {
+      width: 180px;
+    }
+
+    .market-cell {
+      width: 80px;
+    }
+
+    .money-cell {
+      width: 90px;
+    }
+
+    .ratio-cell {
+      width: 70px;
+    }
+
+    .pnl-cell {
+      width: 70px;
+    }
+
+    .disabled-column { opacity: 0.4; pointer-events: none; } th.disabled-column { color: var(--text-muted) !important; background: var(--bg-tertiary) !important; } th.disabled-column::after { content: " (本期不上)"; font-size: 10px; opacity: 0.7; } th.disabled-column .th-hint { display: none; } td.disabled-column, td.disabled-column * { color: var(--text-muted) !important; } .alert-cell {
+      width: 100px;
+    }
+
+    .display-cell {
+      width: 60px;
+    }
+
+    .market-status-cell {
+      width: 60px;
+    }
+
+    .im-status-cell {
+      width: 70px;
+    }
+
+    .flight-cell {
+      width: 50px;
+    }
+
+    .odds-type-cell {
+      width: 60px;
+    }
+
+    .trader-cell {
+      width: 140px;
+    }
+
+    .action-cell {
+      width: 120px;
+    }
+
+    /* 时间列 */
+    .time-date {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .time-main {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .time-phase {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .time-phase.live {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .time-phase.prematch {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .time-phase.break {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--accent-orange);
+    }
+
+    .time-phase.notstarted {
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    .time-bo { font-size: 9px; padding: 1px 4px; border-radius: 2px; background: rgba(163,113,247,0.15); color: var(--accent-purple); margin-left: 4px; font-weight: 500; }
+    .time-update {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* 联赛列 */
+    .league-country {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .league-cell-name {
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+
+    .league-meta {
+      display: flex;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .league-id {
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    .league-level {
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 2px;
+      font-weight: 600;
+    }
+
+    .league-level.s {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .league-level.a {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--accent-orange);
+    }
+
+    .league-level.b {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .league-level.c {
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+    }
+
+    /* 赛事列 */
+    .event-match {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .team-info {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .team-name {
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 70px;
+    }
+
+    .team-name.home {
+      font-weight: 500;
+    }
+
+    .score-box {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      padding: 2px 6px;
+      background: rgba(57, 211, 83, 0.1);
+      border-radius: 3px;
+      text-align: center;
+      min-width: 36px;
+    }
+
+    .vs-text {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .event-meta {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .event-tag {
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+
+    .event-tag.neutral {
+      background: rgba(163, 113, 247, 0.15);
+      color: var(--accent-purple);
+    }
+
+    .event-tag.hot {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .event-tag.delay {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--accent-orange);
+    }
+
+    .event-id {
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    /* 玩法列 */
+    .market-count {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .market-detail {
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    /* 投注/赔付列 */
+    .money-bet {
+      font-size: 11px;
+      color: var(--accent-cyan);
+    }
+
+    .money-payout {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* 单边比例列 */
+    .ratio-bar {
+      height: 4px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 3px;
+    }
+
+    .ratio-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    .ratio-fill.safe {
+      background: var(--accent-green);
+    }
+
+    .ratio-fill.warn {
+      background: var(--accent-orange);
+    }
+
+    .ratio-fill.danger {
+      background: var(--accent-red);
+    }
+
+    .ratio-text {
+      font-size: 10px;
+    }
+
+    .ratio-text.safe {
+      color: var(--accent-green);
+    }
+
+    .ratio-text.warn {
+      color: var(--accent-orange);
+    }
+
+    .ratio-text.danger {
+      color: var(--accent-red);
+    }
+
+    /* 盈亏列 */
+    .pnl-value {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .pnl-value.positive {
+      color: var(--accent-green);
+    }
+
+    .pnl-value.negative {
+      color: var(--accent-red);
+    }
+
+    /* 告警列 - 轮播容器 */
+    .alert-tags {
+      position: relative;
+      height: 20px;
+      min-width: 80px;
+      overflow: hidden;
+    }
+
+    .alert-tags .alert-tag {
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      transform: translateY(-100%);
+      transition: all 0.4s ease-in-out;
+    }
+
+    .alert-tags .alert-tag.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .alert-tags .alert-tag.exit {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+
+    /* 单个告警时不需要轮播动画 */
+    .alert-tags.single .alert-tag {
+      position: relative;
+      opacity: 1;
+      transform: none;
+    }
+
+    /* 告警计数指示器 */
+    .alert-count {
+      position: absolute;
+      right: 0;
+      top: 0;
+      font-size: 8px;
+      color: var(--text-muted);
+      background: var(--bg-tertiary);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    .alert-tag {
+      font-size: 9px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .alert-tag.critical {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--accent-red);
+      animation: alertPulse 1.5s infinite;
+    }
+
+    @keyframes alertPulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.6;
+      }
+    }
+
+    .alert-tag.danger {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .alert-tag.warning {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--accent-orange);
+    }
+
+    .alert-tag.info {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    /* 新增告警闪烁提示 */
+    .alert-tag.new {
+      animation: newAlertBlink 0.5s ease-in-out 3;
+    }
+
+    @keyframes newAlertBlink {
+
+      0%,
+      100% {
+        box-shadow: none;
+      }
+
+      50% {
+        box-shadow: 0 0 8px currentColor;
+      }
+    }
+
+    /* 状态标签 */
+    .status-tag {
+      font-size: 10px;
+      padding: 3px 6px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    .status-tag.online {
+      background: rgba(57, 211, 83, 0.15);
+      color: var(--accent-green);
+    }
+
+    .status-tag.offline {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .status-tag.pending {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--accent-orange);
+    }
+
+    .status-tag.paused,
+    .status-tag.hidden {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--accent-orange);
+    }
+
+    .status-tag.locked {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .status-tag.normal {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    /* 飞单状态 */
+    .flight-status {
+      font-size: 10px;
+    }
+
+    .odds-type {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: rgba(136, 146, 157, 0.15);
+      color: var(--text-secondary);
+    }
+
+    .odds-type.my {
+      background: rgba(57, 211, 83, 0.15);
+      color: var(--accent-green);
+    }
+
+    .odds-type.eu {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .odds-type.hk {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--accent-orange);
+    }
+
+    .odds-type.id {
+      background: rgba(163, 113, 247, 0.15);
+      color: var(--accent-purple);
+    }
+
+    .flight-status.on {
+      color: var(--accent-green);
+    }
+
+    .flight-status.off {
+      color: var(--text-muted);
+    }
+
+    /* 操盘手列（支持赛前/滚球阶段） */
+    .trader-cell {
+      width: 140px;
+    }
+
+    .trader-phase-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .trader-phase-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .trader-phase-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      width: 28px;
+      flex-shrink: 0;
+    }
+
+    .trader-phase-label.prematch {
+      color: var(--accent-blue);
+    }
+
+    .trader-phase-label.live {
+      color: var(--accent-red);
+    }
+
+    .trader-info {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .trader-info:hover {
+      color: var(--accent-blue);
+    }
+
+    .trader-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent-purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .trader-name {
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 50px;
+    }
+
+    .trader-unassigned {
+      font-size: 10px;
+      color: var(--accent-orange);
+      cursor: pointer;
+      padding: 2px 5px;
+      border: 1px dashed var(--accent-orange);
+      border-radius: 3px;
+    }
+
+    .trader-unassigned:hover {
+      background: rgba(210, 153, 34, 0.1);
+    }
+
+    .trader-single {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* 操作列 */
+    .actions {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .act-btn {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .act-btn.primary {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    .act-btn.primary:hover {
+      background: #4c9aed;
+    }
+
+    .act-btn.secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border-color: var(--border);
+    }
+
+    .act-btn.secondary:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .act-btn.danger {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .act-btn.danger:hover {
+      background: rgba(248, 81, 73, 0.25);
+    }
+
+    .act-btn.success {
+      background: rgba(57, 211, 83, 0.15);
+      color: var(--accent-green);
+    }
+
+    .act-btn.success:hover {
+      background: rgba(57, 211, 83, 0.25);
+    }
+
+    .act-btn.pause {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--accent-orange);
+    }
+
+    .act-btn.warning {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .act-btn.pause:hover {
+      background: rgba(210, 153, 34, 0.25);
+    }
+
+    /* ========== 弹窗 ========== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 480px;
+      max-width: 90vw;
+      max-height: 85vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: slideDown 0.3s ease;
+    }
+
+    .modal.large {
+      width: 640px;
+    }
+
+    .modal.xlarge {
+      width: 800px;
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 20px;
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    .modal-close:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-tertiary);
+    }
+
+    /* 弹窗表单 */
+    .modal-info {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+
+    .modal-info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 12px;
+    }
+
+    .modal-info-label {
+      color: var(--text-muted);
+    }
+
+    .modal-info-value {
+      font-weight: 500;
+    }
+
+    .modal-warning {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(210, 153, 34, 0.1);
+      border: 1px solid rgba(210, 153, 34, 0.3);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: var(--accent-orange);
+    }
+
+    .modal-danger {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(248, 81, 73, 0.1);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: var(--accent-red);
+    }
+
+    .modal-success {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(57, 211, 83, 0.1);
+      border: 1px solid rgba(57, 211, 83, 0.3);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: var(--accent-green);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-label.required::after {
+      content: ' *';
+      color: var(--accent-red);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .form-hint {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ========== 单选按钮组 ========== */
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .radio-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .radio-item:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent-blue);
+    }
+
+    .radio-item:has(input:checked) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent-blue);
+    }
+
+    .radio-item input[type="radio"] {
+      margin-top: 3px;
+      accent-color: var(--accent-blue);
+    }
+
+    .radio-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .radio-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 2px;
+    }
+
+    /* 操盘手选择列表（支持赛前/滚球阶段分配） */
+    .trader-list {
+      max-height: 280px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .trader-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    .trader-item:last-child {
+      border-bottom: none;
+    }
+
+    .trader-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .trader-item.selected {
+      background: rgba(88, 166, 255, 0.1);
+    }
+
+    .trader-item .trader-avatar {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .trader-item .trader-info {
+      flex: 1;
+    }
+
+    .trader-item .trader-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .trader-item .trader-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 12px;
+      margin-top: 2px;
+    }
+
+    .trader-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .trader-item.selected .trader-checkbox {
+      border-color: var(--accent-blue);
+      background: var(--accent-blue);
+    }
+
+    .trader-item.selected .trader-checkbox::after {
+      content: '✓';
+      color: #fff;
+      font-size: 10px;
+    }
+
+    /* 阶段分配Tab */
+    .phase-assign-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .phase-assign-tab {
+      padding: 8px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .phase-assign-tab:hover {
+      background: var(--bg-hover);
+    }
+
+    .phase-assign-tab.active {
+      background: var(--accent-blue);
+      color: #fff;
+      border-color: var(--accent-blue);
+    }
+
+    .phase-assign-tab.prematch.active {
+      background: var(--accent-blue);
+    }
+
+    .phase-assign-tab.live.active {
+      background: var(--accent-red);
+    }
+
+    /* 玩法分配操盘手弹窗 */
+    .assign-mode-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .assign-mode-tab {
+      flex: 1;
+      padding: 10px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .assign-mode-tab:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent-blue);
+    }
+
+    .assign-mode-tab.active {
+      background: rgba(88, 166, 255, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .assign-mode-tab-icon {
+      font-size: 16px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .assign-mode-tab-label {
+      font-weight: 500;
+    }
+
+    .assign-mode-tab-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .bettype-assign-list {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 16px;
+    }
+
+    .bettype-assign-header {
+      display: grid;
+      grid-template-columns: 140px 1fr 1fr 60px;
+      gap: 12px;
+      padding: 10px 16px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .bettype-assign-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 1fr 60px;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+
+    .bettype-assign-row:last-child {
+      border-bottom: none;
+    }
+
+    .bettype-assign-row:hover {
+      background: var(--bg-hover);
+    }
+
+    .bettype-name {
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bettype-icon {
+      font-size: 14px;
+    }
+
+    .bettype-select {
+      width: 100%;
+      padding: 6px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .bettype-select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .bettype-same-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .bettype-same-btn:hover {
+      background: var(--bg-hover);
+      color: var(--accent-blue);
+    }
+
+    .assign-summary {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 16px;
+    }
+
+    .assign-summary-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .assign-summary-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .assign-summary-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--bg-secondary);
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .assign-summary-bettype {
+      color: var(--text-secondary);
+    }
+
+    .assign-summary-trader {
+      color: var(--accent-blue);
+      font-weight: 500;
+    }
+
+    .unified-assign-section {
+      padding: 16px 0;
+    }
+
+    .unified-assign-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .unified-assign-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      min-width: 80px;
+    }
+
+    .unified-assign-select {
+      flex: 1;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .bettype-phase-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .bettype-phase-title {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bettype-phase-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .bettype-phase-badge.prematch {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .bettype-phase-badge.live {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    /* 穿梭框样式 */
+    .transfer-box {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .transfer-panel {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .transfer-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .transfer-panel-count {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .transfer-panel-list {
+      flex: 1;
+      max-height: 280px;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .transfer-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 12px;
+    }
+
+    .transfer-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .transfer-item.selected {
+      background: rgba(88, 166, 255, 0.15);
+      border: 1px solid var(--accent-blue);
+    }
+
+    .transfer-item-checkbox {
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .transfer-item.selected .transfer-item-checkbox {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    .transfer-item.selected .transfer-item-checkbox::after {
+      content: '✓';
+      color: #fff;
+      font-size: 10px;
+    }
+
+    .transfer-item-id {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: ui-monospace, monospace;
+    }
+
+    .transfer-item-name {
+      flex: 1;
+    }
+
+    .transfer-operations {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 8px;
+    }
+
+    .transfer-op-btn {
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .transfer-op-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border-color: var(--accent-blue);
+    }
+
+    .transfer-op-btn.primary {
+      background: var(--accent-blue);
+      color: #fff;
+      border-color: var(--accent-blue);
+    }
+
+    .transfer-op-btn.primary:hover {
+      background: #4c9aed;
+    }
+
+    .transfer-op-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .transfer-trader-select {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+
+    .transfer-quick-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-tertiary);
+    }
+
+    .transfer-quick-btn {
+      padding: 4px 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-size: 10px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .transfer-quick-btn:hover {
+      background: var(--bg-hover);
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    .assigned-group {
+      margin-bottom: 12px;
+    }
+
+    .assigned-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .assigned-group-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: rgba(88, 166, 255, 0.1);
+      border-radius: 4px;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+
+    .assigned-group-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #fff;
+    }
+
+    .assigned-group-name {
+      font-weight: 500;
+      color: var(--accent-blue);
+    }
+
+    .assigned-group-count {
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    .assigned-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      font-size: 11px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .assigned-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .assigned-item.selected {
+      background: rgba(248, 81, 73, 0.1);
+    }
+
+    .assigned-item-phase {
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+
+    .assigned-item-phase.prematch {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .assigned-item-phase.live {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .phase-tabs-inline {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .phase-tab-inline {
+      flex: 1;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .phase-tab-inline:hover {
+      background: var(--bg-hover);
+    }
+
+    .phase-tab-inline.active {
+      background: rgba(88, 166, 255, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .phase-tab-inline.active.live {
+      background: rgba(248, 81, 73, 0.15);
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+
+    /* 操盘日志 - 与操盘页统一 */
+    .log-filter-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .log-filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .log-filter-item label {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .log-filter-item .form-select,
+    .log-filter-item .form-input {
+      width: auto;
+      min-width: 120px;
+      padding: 6px 10px;
+      font-size: 11px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+    }
+    .log-list {
+      max-height: 350px;
+      overflow-y: auto;
+    }
+    .log-table {
+      width: 100%;
+      font-size: 11px;
+      border-collapse: collapse;
+    }
+    .log-table th, .log-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .log-table th {
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+      font-weight: 500;
+      position: sticky;
+      top: 0;
+    }
+    .log-table tbody tr:hover {
+      background: var(--bg-hover);
+    }
+    .log-time {
+      color: var(--text-muted);
+      font-family: ui-monospace, Monaco, monospace;
+    }
+    .log-type {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .log-type.status { background: rgba(88,166,255,0.2); color: var(--accent-blue); }
+    .log-type.odds { background: rgba(57,211,83,0.2); color: var(--accent-green); }
+    .log-type.line { background: rgba(210,153,34,0.2); color: var(--accent-orange); }
+    .log-type.payout { background: rgba(142,153,166,0.2); color: var(--text-muted); }
+    .log-type.ao-toggle { background: rgba(163,113,247,0.2); color: var(--accent-purple); }
+    .log-type.fly-toggle { background: rgba(6,214,160,0.2); color: #06d6a0; }
+    .log-type.operator { background: rgba(142,153,166,0.2); color: var(--text-muted); }
+    .log-source {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .log-source.manual { background: rgba(88,166,255,0.2); color: var(--accent-blue); }
+    .log-source.ao { background: rgba(57,211,83,0.2); color: var(--accent-green); }
+    .log-source.risk { background: rgba(248,81,73,0.2); color: var(--accent-red); }
+    .log-source.datasource { background: rgba(210,153,34,0.2); color: var(--accent-orange); }
+    .log-source.system { background: rgba(142,153,166,0.2); color: var(--text-muted); }
+    .log-source.cascade { background: rgba(163,113,247,0.2); color: var(--accent-purple); }
+    .log-pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      margin-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .log-pagination-info {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .log-pagination-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Toast通知 */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      animation: toastIn 0.3s ease;
+      min-width: 280px;
+      max-width: 400px;
+    }
+
+    @keyframes toastIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .toast.success {
+      border-color: rgba(57, 211, 83, 0.3);
+    }
+
+    .toast.warning {
+      border-color: rgba(210, 153, 34, 0.3);
+    }
+
+    .toast.error {
+      border-color: rgba(248, 81, 73, 0.3);
+    }
+
+    .toast-icon {
+      font-size: 16px;
+    }
+
+    .toast-content {
+      flex: 1;
+    }
+
+    .toast-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .toast-msg {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* ========== 分页器 ========== */
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+      margin-top: 16px;
+    }
+
+    .page-info {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .page-size {
+      padding: 4px 8px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+
+    .page-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .page-btn {
+      min-width: 32px;
+      height: 32px;
+      padding: 0 8px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .page-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .page-btn.active {
+      background: var(--accent-blue);
+      color: #fff;
+      border-color: var(--accent-blue);
+    }
+
+    .page-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .page-numbers {
+      display: flex;
+      gap: 4px;
+    }
+
+    .page-ellipsis {
+      color: var(--text-muted);
+      padding: 0 4px;
+    }
+
+    .page-jump {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .page-input {
+      width: 50px;
+      padding: 4px 8px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    /* ========== 空状态 ========== */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .empty-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .empty-desc {
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    /* ========== 加载遮罩 ========== */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(13, 17, 23, 0.8);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* ========== 红牌显示 ========== */
+    .red-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      font-size: 10px;
+      color: var(--accent-red);
+      margin-left: 4px;
+    }
+
+    .red-card-icon {
+      width: 10px;
+      height: 14px;
+      background: var(--accent-red);
+      border-radius: 2px;
+    }
+
+    .red-card-count {
+      font-weight: 600;
+    }
+
+    /* ========== 直播图标 ========== */
+    .live-stream-icon {
+      font-size: 12px;
+      color: var(--accent-purple);
+      margin-left: 4px;
+      cursor: help;
+    }
+
+    /* ========== 实时事件提醒 ========== */
+    .event-alert {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--bg-secondary);
+      border: 2px solid var(--accent-red);
+      border-radius: 12px;
+      padding: 24px 32px;
+      z-index: 3000;
+      text-align: center;
+      animation: eventAlertIn 0.3s ease;
+      box-shadow: 0 8px 32px rgba(248, 81, 73, 0.3);
+    }
+
+    @keyframes eventAlertIn {
+      from {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0;
+      }
+
+      to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .event-alert-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .event-alert-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .event-alert-match {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .event-alert-detail {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent-red);
+    }
+
+    .event-alert-close {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .row-goal-flash {
+      animation: goalFlash 0.5s ease 3;
+    }
+
+    @keyframes goalFlash {
+
+      0%,
+      100% {
+        background: inherit;
+      }
+
+      50% {
+        background: rgba(57, 211, 83, 0.3);
+      }
+    }
+
+    .row-redcard-flash {
+      animation: redcardFlash 0.5s ease 3;
+    }
+
+    @keyframes redcardFlash {
+
+      0%,
+      100% {
+        background: inherit;
+      }
+
+      50% {
+        background: rgba(248, 81, 73, 0.3);
+      }
+    }
+
+    /* ========== 列配置 ========== */
+    .column-config-btn {
+      padding: 6px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+
+    .column-config-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .column-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .column-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: move;
+    }
+
+    .column-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .column-item-drag {
+      color: var(--text-muted);
+      cursor: grab;
+    }
+
+    .column-item-checkbox {
+      width: 16px;
+      height: 16px;
+    }
+
+    .column-item-name {
+      flex: 1;
+      font-size: 13px;
+    }
+
+    .column-item-lock {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* ========== 赛事预览浮层 ========== */
+    .event-preview {
+      position: absolute;
+      width: 480px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      z-index: 500;
+    }
+
+    .event-preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .event-preview-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .event-preview-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .event-preview-body {
+      padding: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .preview-section {
+      margin-bottom: 16px;
+    }
+
+    .preview-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .preview-section-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .preview-odds-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .preview-odds-item {
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .preview-odds-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .preview-odds-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+    }
+
+    .preview-odds-ratio {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .preview-log-item {
+      display: flex;
+      gap: 8px;
+      font-size: 11px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .preview-log-item:last-child {
+      border-bottom: none;
+    }
+
+    .preview-log-time {
+      color: var(--text-muted);
+      width: 70px;
+      flex-shrink: 0;
+    }
+
+    .preview-log-content {
+      flex: 1;
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ========== 操作按钮禁用态 ========== */
+    .act-btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* ========== 快捷键提示 ========== */
+    .shortcut-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      z-index: 50;
+    }
+
+    .shortcut-hint-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .shortcut-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 4px 0;
+    }
+
+    .shortcut-key {
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: ui-monospace, monospace;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 顶部导航栏 -->
+  <nav class="top-nav">
+    <a class="top-nav-logo" href="trading-list.html" style="text-decoration:none;">
+      <span class="top-nav-logo-icon">T</span>
+      <span class="top-nav-logo-text">TMS</span>
+    </a>
+    <div class="top-nav-menu">
+      <a class="top-nav-item" href="league-management.html" style="text-decoration:none;">
+        <span>联赛管理</span>
+      </a>
+      <a class="top-nav-item active" href="trading-list.html" style="text-decoration:none;">
+        <span>操盘列表</span>
+      </a>
+      <a class="top-nav-item" href="Trading-Detail.html" style="text-decoration:none;">
+        <span>操盘详情</span>
+      </a>
+      <a class="top-nav-item" href="risk-management.html" style="text-decoration:none;">
+        <span>风控管理</span>
+      </a>
+      <a class="top-nav-item" href="settlement-list.html" style="text-decoration:none;">
+        <span>结算管理</span>
+      </a>
+      <a class="top-nav-item" href="settlement-detail.html" style="text-decoration:none;">
+        <span>结算详情</span>
+      </a>
+      <a class="top-nav-item" href="settlement-report.html" style="text-decoration:none;">
+        <span>结算报表</span>
+      </a>
+    </div>
+    <div class="top-nav-right">
+      <!-- 赔率制式切换 -->
+      <div class="odds-format-switcher">
+        <span class="odds-format-label">赔率</span>
+        <div class="odds-format-toggle">
+          <button class="odds-format-btn active" data-format="hk" onclick="switchOddsFormat('hk')">港赔</button>
+          <button class="odds-format-btn" data-format="decimal" onclick="switchOddsFormat('decimal')">欧赔</button>
+        </div>
+      </div>
+      <!-- 数据源状态 -->
+      <div style="display:flex;align-items:center;gap:6px;padding-right:12px;border-right:1px solid var(--border);">
+        <span style="width:6px;height:6px;background:var(--accent-green);border-radius:50%;"></span>
+        <span style="font-size:11px;color:var(--text-secondary);">IM</span>
+        <span style="font-size:10px;color:var(--text-muted);">23ms</span>
+      </div>
+      <div class="top-nav-user">
+        <div class="top-nav-avatar">张</div>
+        <span class="top-nav-username">张三</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="app">
+    <!-- 左侧边栏（支持折叠）- 运动类型导航 -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">📊</div>
+          <span class="logo-text">筛选</span>
+        </div>
+        <button class="collapse-btn" onclick="toggleSidebar()" title="折叠/展开侧边栏">◀</button>
+      </div>
+
+      <!-- 搜索框 -->
+      <div class="sidebar-search">
+        <input type="text" placeholder="🔍 搜索赛事/联赛..." style="width:100%;padding:8px 12px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;outline:none;" onfocus="this.style.borderColor='var(--accent-blue)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+
+      <!-- 运动类型树（支持IM数据源所有运动类型） -->
+      <div class="sport-tree">
+        <!-- 全部 -->
+        <div class="sport-item active">
+          <span class="sport-icon">📊</span>
+          <span class="sport-name">全部运动</span>
+          <span class="sport-count">156</span>
+        </div>
+
+        <!-- 足球 -->
+        <div class="sport-item expanded" onclick="toggleSport(this)">
+          <span class="sport-icon">⚽</span>
+          <span class="sport-name">足球</span>
+          <span class="sport-count live">98</span>
+          <span class="sport-expand">▼</span>
+        </div>
+        <div class="league-list" style="display:block;">
+          <div class="league-item active">
+            <span class="league-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+            <span class="league-name">英格兰超级联赛</span>
+            <span class="league-count">12</span>
+          </div>
+          <div class="league-item">
+            <span class="league-flag">🇪🇸</span>
+            <span class="league-name">西班牙甲级联赛</span>
+            <span class="league-count">10</span>
+          </div>
+          <div class="league-item">
+            <span class="league-flag">🇩🇪</span>
+            <span class="league-name">德国甲级联赛</span>
+            <span class="league-count">9</span>
+          </div>
+          <div class="league-item">
+            <span class="league-flag">🇮🇹</span>
+            <span class="league-name">意大利甲级联赛</span>
+            <span class="league-count">10</span>
+          </div>
+          <div class="league-item">
+            <span class="league-flag">🇫🇷</span>
+            <span class="league-name">法国甲级联赛</span>
+            <span class="league-count">9</span>
+          </div>
+        </div>
+
+        <!-- 篮球 -->
+        <div class="sport-item" onclick="toggleSport(this)">
+          <span class="sport-icon">🏀</span>
+          <span class="sport-name">篮球</span>
+          <span class="sport-count live">32</span>
+          <span class="sport-expand">▶</span>
+        </div>
+        <div class="league-list">
+          <div class="league-item">
+            <span class="league-flag">🇺🇸</span>
+            <span class="league-name">NBA</span>
+            <span class="league-count">15</span>
+          </div>
+          <div class="league-item">
+            <span class="league-flag">🇪🇺</span>
+            <span class="league-name">欧洲篮球联赛</span>
+            <span class="league-count">8</span>
+          </div>
+          <div class="league-item">
+            <span class="league-flag">🇨🇳</span>
+            <span class="league-name">CBA</span>
+            <span class="league-count">9</span>
+          </div>
+        </div>
+
+        <!-- 网球 -->
+        <div class="sport-item" onclick="toggleSport(this)">
+          <span class="sport-icon">🎾</span>
+          <span class="sport-name">网球</span>
+          <span class="sport-count">18</span>
+          <span class="sport-expand">▶</span>
+        </div>
+        <div class="league-list">
+          <div class="league-item">
+            <span class="league-flag">🌍</span>
+            <span class="league-name">ATP巡回赛</span>
+            <span class="league-count">10</span>
+          </div>
+          <div class="league-item">
+            <span class="league-flag">🌍</span>
+            <span class="league-name">WTA巡回赛</span>
+            <span class="league-count">8</span>
+          </div>
+        </div>
+
+        <!-- 棒球 -->
+        <div class="sport-item" onclick="toggleSport(this)">
+          <span class="sport-icon">⚾</span>
+          <span class="sport-name">棒球</span>
+          <span class="sport-count">5</span>
+          <span class="sport-expand">▶</span>
+        </div>
+        <div class="league-list">
+          <div class="league-item">
+            <span class="league-flag">🇺🇸</span>
+            <span class="league-name">MLB</span>
+            <span class="league-count">3</span>
+          </div>
+          <div class="league-item">
+            <span class="league-flag">🇯🇵</span>
+            <span class="league-name">日本职业棒球</span>
+            <span class="league-count">2</span>
+          </div>
+        </div>
+
+        <!-- 冰球 -->
+        <div class="sport-item" onclick="toggleSport(this)">
+          <span class="sport-icon">🏒</span>
+          <span class="sport-name">冰球</span>
+          <span class="sport-count">3</span>
+          <span class="sport-expand">▶</span>
+        </div>
+        <div class="league-list">
+          <div class="league-item">
+            <span class="league-flag">🇺🇸</span>
+            <span class="league-name">NHL</span>
+            <span class="league-count">3</span>
+          </div>
+        </div>
+
+        <!-- 电子竞技 -->
+        <div class="sport-item" onclick="toggleSport(this)">
+          <span class="sport-icon">🎮</span>
+          <span class="sport-name">电子竞技</span>
+          <span class="sport-count live">12</span>
+          <span class="sport-expand">▶</span>
+        </div>
+        <div class="league-list">
+          <div class="league-item">
+            <span class="league-flag">🌍</span>
+            <span class="league-name">英雄联盟</span>
+            <span class="league-count">5</span>
+          </div>
+          <div class="league-item">
+            <span class="league-flag">🌍</span>
+            <span class="league-name">DOTA2</span>
+            <span class="league-count">4</span>
+          </div>
+          <div class="league-item">
+            <span class="league-flag">🌍</span>
+            <span class="league-name">CS2</span>
+            <span class="league-count">3</span>
+          </div>
+        </div>
+
+        <!-- 排球 -->
+        <div class="sport-item" onclick="toggleSport(this)">
+          <span class="sport-icon">🏐</span>
+          <span class="sport-name">排球</span>
+          <span class="sport-count">6</span>
+          <span class="sport-expand">▶</span>
+        </div>
+        <div class="league-list"></div>
+
+        <!-- 乒乓球 -->
+        <div class="sport-item" onclick="toggleSport(this)">
+          <span class="sport-icon">🏓</span>
+          <span class="sport-name">乒乓球</span>
+          <span class="sport-count">4</span>
+          <span class="sport-expand">▶</span>
+        </div>
+        <div class="league-list"></div>
+
+        <!-- 羽毛球 -->
+        <div class="sport-item" onclick="toggleSport(this)">
+          <span class="sport-icon">🏸</span>
+          <span class="sport-name">羽毛球</span>
+          <span class="sport-count">0</span>
+          <span class="sport-expand">▶</span>
+        </div>
+        <div class="league-list"></div>
+
+        <!-- 美式足球 -->
+        <div class="sport-item" onclick="toggleSport(this)">
+          <span class="sport-icon">🏈</span>
+          <span class="sport-name">美式足球</span>
+          <span class="sport-count">0</span>
+          <span class="sport-expand">▶</span>
+        </div>
+        <div class="league-list"></div>
+      </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main">
+      <!-- 网络状态banner -->
+      <div class="network-banner" id="networkBanner">
+        <span>⚠️</span>
+        <span>网络连接异常，数据可能不是最新状态。请检查网络后重试。</span>
+        <button class="btn btn-sm btn-secondary">重新连接</button>
+      </div>
+
+      <!-- 顶部栏 -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="stats">
+            <div class="stat" onclick="filterByPending()" title="点击筛选待上架赛事（全局数量，不受筛选影响）">
+              <div class="stat-value warn">12</div>
+              <div class="stat-label">待上架</div>
+            </div>
+            <div class="stat" onclick="filterByLive()" title="点击筛选滚球赛事（全局数量，不受筛选影响）">
+              <div class="stat-value live">8</div>
+              <div class="stat-label">滚球中</div>
+            </div>
+            <div class="stat" title="当前筛选条件下的赛事数量">
+              <div class="stat-value info">156</div>
+              <div class="stat-label">总赛事</div>
+            </div>
+            <div class="stat" onclick="filterByDelay()" title="点击筛选延期赛事（全局数量）">
+              <div class="stat-value delay">2</div>
+              <div class="stat-label">延期赛事</div>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="server-time"><span class="timezone" style="margin-right:8px;opacity:0.7;">北京时间 UTC+8</span><span id="serverTime">2026-01-19 19:32:45</span></div>
+          <button class="btn btn-secondary" onclick="refreshList()">⟳ 刷新</button>
+          <button class="btn btn-secondary" onclick="simulateGoalAlert()" title="演示进球提醒">⚽ 进球</button>
+          <button class="btn btn-secondary" onclick="simulateRedCardAlert()" title="演示红牌提醒">🟥 红牌</button>
+          <button class="btn btn-danger" title="仅主管/风控可用，锁定所有滚球赛事" onclick="showModal('lockAllModal')">🔒 一键锁盘</button>
+        </div>
+      </header>
+
+      <!-- 筛选区 -->
+      <div class="filter-section">
+        <!-- 第1行 - 日期筛选 + 快捷场景 -->
+        <div class="filter-row-1">
+          <span class="date-label">比赛日:</span>
+          <button class="date-btn" onclick="selectDate('yesterday')">昨日</button>
+          <button class="date-btn active" onclick="selectDate('today')">今日</button>
+          <button class="date-btn" onclick="selectDate('tomorrow')">明日</button>
+          <button class="date-btn" onclick="selectDate('dayafter')">后天</button>
+          <div class="filter-divider"></div>
+          <div class="date-range">
+            <span class="date-range-label">自定义:</span>
+            <input type="datetime-local" class="date-input" id="dateFrom" value="2026-01-19T00:00:00" step="1">
+            <span style="color:var(--text-muted);">至</span>
+            <input type="datetime-local" class="date-input" id="dateTo" value="2026-01-19T23:59:59" step="1">
+            <button class="btn btn-sm btn-secondary" onclick="applyDateRange()">应用</button>
+            <span class="date-hint" id="dateHint">已应用自定义日期时间</span>
+          </div>
+          <div class="quick-scene">
+            <button class="quick-btn" onclick="this.classList.toggle('active')">🎯 待上架全部</button>
+            <button class="quick-btn" onclick="this.classList.toggle('active')">⚠️ 需处理</button>
+            <button class="quick-btn" onclick="this.classList.toggle('active')">👤 我负责的</button>
+          </div>
+        </div>
+
+        <!-- 第2行 - 比赛进程Tab -->
+        <div class="filter-row-2">
+          <div class="phase-tab active" onclick="selectPhase(this, 'all')">📋 全部<span class="cnt">156</span></div>
+          <div class="phase-tab live" onclick="selectPhase(this, 'live')">🔴 滚球<span class="cnt">8</span><span
+              class="realtime-tag">实时</span></div>
+          <div class="phase-tab" onclick="selectPhase(this, 'imminent')">⏰ 即将<span class="cnt">5</span><span
+              class="realtime-tag">实时</span></div>
+          <div class="phase-tab" onclick="selectPhase(this, 'prematch')">📅 赛前<span class="cnt">143</span></div>
+          <span class="phase-hint"><span class="hint-icon">💡</span>标记「实时」的进程不受日期筛选影响</span>
+        </div>
+
+        <!-- 第3行 - 赛事状态 + 上架状态（根据V1.4调整） -->
+        <div class="filter-row-3">
+          <span class="filter-label">赛事状态:</span>
+          <div class="status-group">
+            <button class="status-btn active" onclick="toggleStatus(this)">全部</button>
+            <button class="status-btn" onclick="toggleStatus(this)">正常</button>
+            <button class="status-btn delay" onclick="toggleStatus(this)">⏸延期<span class="badge">2</span></button>
+          </div>
+          <div class="group-divider"></div>
+          <span class="filter-label">上架状态:</span>
+          <div class="status-group">
+            <button class="status-btn active" onclick="toggleStatus(this)">全部</button>
+            <button class="status-btn pending" onclick="toggleStatus(this)">待上架<span class="badge">12</span></button>
+            <button class="status-btn" onclick="toggleStatus(this)">已上架</button>
+            <button class="status-btn" onclick="toggleStatus(this)">已下架</button>
+          </div>
+          <div class="notification-toggle active" title="开启/关盘新告警通知" onclick="this.classList.toggle('active')">🔔 告警通知
+          </div>
+          <div class="notification-toggle" title="开启/关盘声音提醒" onclick="this.classList.toggle('active')">🔊 声音</div>
+        </div>
+
+        <!-- 第4行 - 其他筛选 -->
+        <div class="filter-row-4">
+          <select class="filter-select">
+            <option>全部联赛</option>
+            <option>英超</option>
+            <option>西甲</option>
+            <option>德甲</option>
+            <option>意甲</option>
+            <option>法甲</option>
+          </select>
+          <select class="filter-select">
+            <option>联赛等级</option>
+            <option>默认</option>
+            <option>等级 1</option>
+            <option>等级 2</option>
+            <option>等级 3</option>
+            <option>等级 4</option>
+            <option>等级 5</option>
+            <option>等级 6</option>
+            <option>等级 7</option>
+            <option>等级 8</option>
+            <option>等级 9</option>
+            <option>等级 10</option>
+          </select>
+          <select class="filter-select">
+            <option>盘口状态</option>
+            <option>开盘</option>
+            <option>隐藏</option>
+            <option>锁定</option>
+          </select>
+          <select class="filter-select">
+            <option>告警状态 (本期不上)</option>
+            <option>有告警</option>
+            <option>无告警</option>
+            <option>单边超限</option>
+            <option>大额投注</option>
+          </select>
+          <select class="filter-select">
+            <option>分配状态</option>
+            <option>已分配</option>
+            <option>未分配</option>
+          </select>
+          <select class="filter-select">
+            <option>全部操盘手</option>
+            <option>张三</option>
+            <option>李四</option>
+            <option>王五</option>
+          </select>
+          <div class="search-box">
+            <input type="text" placeholder="搜索赛事/球队/ID...">
+          </div>
+          <select class="sort-select">
+            <option>默认排序</option>
+            <option>按开赛时间</option>
+            <option>按投注额</option>
+            <option>按单边比例</option>
+            <option>按盈亏</option>
+          </select>
+          <button class="export-btn">📥 导出</button>
+          <button class="column-config-btn" onclick="showModal('columnConfigModal')">⚙️ 列配置</button>
+        </div>
+      </div>
+
+      <!-- 数据表格 -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:30px;">
+                <div class="chk" id="selectAll" onclick="toggleAllCheckbox(this)"></div>
+              </th>
+              <th class="time-cell sortable">开赛时间 <span class="sort-icon">↕</span></th>
+              <th class="league-cell">联赛</th>
+              <th class="event-cell">赛事</th>
+              <th class="market-cell">盘口数</th>
+              <th class="money-cell disabled-column">投注/赔付</th>
+              <th class="ratio-cell disabled-column">单边% <span class="th-hint">(最高)</span></th>
+              <th class="pnl-cell disabled-column">盈亏</th>
+              <th class="alert-cell disabled-column">告警</th>
+              <th class="display-cell">上架</th>
+              <th class="market-status-cell">盘口状态</th>
+              <th class="im-status-cell">数据源</th>
+              
+              <th class="trader-cell">操盘手</th>
+              <th class="action-cell">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 置顶区分隔 -->
+            <tr class="table-section-divider">
+              <td colspan="14">📌 置顶区 - 需紧急处理（3场）</td>
+            </tr>
+
+            <!-- 1. 待上架+滚球 - 最紧急！（赛前/滚球分配不同操盘手） -->
+            <tr class="row-critical row-live">
+              <td class="disabled-column">
+                <div class="chk" onclick="toggleCheckbox(this)"></div>
+              </td>
+              <td class="time-cell">
+                <div class="time-date">2026-01-19 <span class="time-bo">BO1</span></div>
+                <div class="time-main">19:00</div>
+                <div class="time-phase live"><span class="dot"></span>上半场 15'</div>
+                <div class="time-update">更新 2s前</div>
+              </td>
+              <td class="league-cell">
+                <div class="league-country">🇹🇷 土耳其</div>
+                <div class="league-cell-name">土耳其超级联赛</div>
+                <div class="league-meta"><span class="league-id">ID: 1020</span><span class="league-level b">B</span>
+                </div>
+              </td>
+              <td class="event-cell">
+                <div class="event-match">
+                  <div class="team-info"><span class="team-name home">加拉塔萨雷</span><span class="red-card"><span
+                        class="red-card-icon"></span></span></div>
+                  <div class="score-box">1-0</div>
+                  <div class="team-info"><span class="team-name">费内巴切</span></div>
+                </div>
+                <div class="event-meta">
+                  <span class="event-tag hot">🔥热门</span>
+                  <span class="live-stream-icon" title="有直播流">📺</span>
+                  <span class="event-id">ID: 98765</span>
+                </div>
+              </td>
+              <td class="disabled-column">
+                <div class="market-count">12</div>
+                <div class="market-detail">3开/9关</div>
+              </td>
+              <td class="disabled-column">
+                <div class="money-bet">¥125,000</div>
+                <div class="money-payout">¥230,000</div>
+              </td>
+              <td class="disabled-column">
+                <div class="ratio-bar">
+                  <div class="ratio-fill danger" style="width:78%"></div>
+                </div>
+                <span class="ratio-text danger">78%</span>
+              </td>
+              <td class="disabled-column"><span class="pnl-value negative">-¥15,200</span></td>
+              <td class="disabled-column">
+                <div class="alert-tags">
+                  <span class="alert-tag critical">🚨最紧急</span>
+                  <span class="alert-tag danger">单边超限</span>
+                </div>
+              </td>
+              <td><span class="status-tag pending">待上架</span></td>
+              <td><span class="status-tag normal">开盘</span></td>
+              <td><span class="flight-status on">●</span></td>
+              
+              <td class="trader-cell">
+                <div class="trader-phase-wrapper">
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label prematch">赛前</span>
+                    <div class="trader-info" onclick="showModal('assignModal')">
+                      <span class="trader-avatar">张</span>
+                      <span class="trader-name">张三</span>
+                    </div>
+                  </div>
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label live">滚球</span>
+                    <span class="trader-unassigned" onclick="showModal('assignModal')">未分配</span>
+                  </div>
+                </div>
+              </td>
+              <td class="action-cell">
+                <div class="actions"><button class="act-btn success"
+                    onclick="showModal('publishModal')">上架</button><button class="act-btn secondary"
+                    onclick="showModal('logModal')">详情</button></div>
+              </td>
+            </tr>
+
+            <!-- 2. 待上架+即将开赛（10分钟内）- 紧急 -->
+            <tr class="row-urgent row-prematch">
+              <td class="disabled-column">
+                <div class="chk" onclick="toggleCheckbox(this)"></div>
+              </td>
+              <td class="time-cell">
+                <div class="time-date">2026-01-19 <span class="time-bo">BO1</span></div>
+                <div class="time-main">19:40</div>
+                <div class="time-phase prematch">⏰ 8分钟后开赛</div>
+              </td>
+              <td class="league-cell">
+                <div class="league-country">🇮🇹 意大利</div>
+                <div class="league-cell-name">意大利甲级联赛</div>
+                <div class="league-meta"><span class="league-id">ID: 1004</span><span class="league-level s">S</span>
+                </div>
+              </td>
+              <td class="event-cell">
+                <div class="event-match">
+                  <div class="team-info"><span class="team-name home">国际米兰</span></div>
+                  <div class="vs-text">VS</div>
+                  <div class="team-info"><span class="team-name">AC米兰</span></div>
+                </div>
+                <div class="event-meta">
+                  <span class="event-tag hot">🔥热门</span>
+                  <span class="event-id">ID: 98766</span>
+                </div>
+              </td>
+              <td class="disabled-column">
+                <div class="market-count">15</div>
+                <div class="market-detail">0开/15关</div>
+              </td>
+              <td class="disabled-column">
+                <div class="money-bet">¥0</div>
+                <div class="money-payout">¥0</div>
+              </td>
+              <td class="disabled-column">
+                <div class="ratio-bar">
+                  <div class="ratio-fill safe" style="width:50%"></div>
+                </div>
+                <span class="ratio-text safe">50%</span>
+              </td>
+              <td class="disabled-column"><span class="pnl-value">¥0</span></td>
+              <td class="disabled-column">
+                <div class="alert-tags">
+                  <span class="alert-tag danger">⚠️紧急</span>
+                  <span class="alert-tag warning">未分配</span>
+                </div>
+              </td>
+              <td><span class="status-tag pending">待上架</span></td>
+              <td><span class="status-tag paused">关盘</span></td>
+              <td><span class="flight-status on">●</span></td>
+              
+              <td class="trader-cell">
+                <span class="trader-unassigned" onclick="showModal('assignModal')">未分配</span>
+              </td>
+              <td class="action-cell">
+                <div class="actions"><button class="act-btn success"
+                    onclick="showModal('publishModal')">上架</button><button class="act-btn secondary"
+                    onclick="showModal('logModal')">详情</button></div>
+              </td>
+            </tr>
+
+            <!-- 3. 高风险告警（单边超限+大额） -->
+            <tr class="row-danger row-live">
+              <td class="disabled-column">
+                <div class="chk" onclick="toggleCheckbox(this)"></div>
+              </td>
+              <td class="time-cell">
+                <div class="time-date">2026-01-19 <span class="time-bo">BO1</span></div>
+                <div class="time-main">19:30</div>
+                <div class="time-phase live"><span class="dot"></span>上半场 32'</div>
+                <div class="time-update">更新 1s前</div>
+              </td>
+              <td class="league-cell">
+                <div class="league-country">🏴󠁧󠁢󠁥󠁮󠁧󠁿 英格兰</div>
+                <div class="league-cell-name">英格兰超级联赛</div>
+                <div class="league-meta"><span class="league-id">ID: 1001</span><span class="league-level s">S</span>
+                </div>
+              </td>
+              <td class="event-cell">
+                <div class="event-match">
+                  <div class="team-info"><span class="team-name home">曼城</span></div>
+                  <div class="score-box">2-1</div>
+                  <div class="team-info"><span class="team-name">利物浦</span><span class="red-card"><span
+                        class="red-card-icon"></span></span></div>
+                </div>
+                <div class="event-meta">
+                  <span class="event-tag hot">🔥热门</span>
+                  <span class="live-stream-icon" title="有直播流">📺</span>
+                  <span class="event-id">ID: 98767</span>
+                </div>
+              </td>
+              <td class="disabled-column">
+                <div class="market-count">18</div>
+                <div class="market-detail">18开/0关</div>
+              </td>
+              <td class="disabled-column">
+                <div class="money-bet">¥580,000</div>
+                <div class="money-payout">¥1,100,000</div>
+              </td>
+              <td class="disabled-column">
+                <div class="ratio-bar">
+                  <div class="ratio-fill danger" style="width:82%"></div>
+                </div>
+                <span class="ratio-text danger">82%</span>
+              </td>
+              <td class="disabled-column"><span class="pnl-value negative">-¥52,800</span></td>
+              <td class="disabled-column">
+                <div class="alert-tags">
+                  <span class="alert-tag danger">单边超限</span>
+                  <span class="alert-tag danger">大额投注</span>
+                </div>
+              </td>
+              <td><span class="status-tag online">已上架</span></td>
+              <td><span class="status-tag normal">开盘</span></td>
+              <td><span class="flight-status on">●</span></td>
+              
+              <td class="trader-cell">
+                <div class="trader-phase-wrapper">
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label prematch">赛前</span>
+                    <div class="trader-info" onclick="showModal('assignModal')">
+                      <span class="trader-avatar">张</span>
+                      <span class="trader-name">张三</span>
+                    </div>
+                  </div>
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label live">滚球</span>
+                    <div class="trader-info" onclick="showModal('assignModal')">
+                      <span class="trader-avatar" style="background:var(--accent-blue);">李</span>
+                      <span class="trader-name">李四</span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="action-cell">
+                <div class="actions"><button class="act-btn warning"
+                    onclick="showModal('offlineModal')">下架</button><button class="act-btn primary">操盘</button><button
+                    class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+              </td>
+            </tr>
+
+            <!-- 普通区域分隔 -->
+            <tr class="table-section-divider"
+              style="background:rgba(88,166,255,0.1);border-left-color:var(--accent-blue);">
+              <td colspan="14" style="color:var(--accent-blue);">📋 普通区域</td>
+            </tr>
+
+            <!-- 普通区域 - 联赛分组：英超 -->
+            <tr class="league-group-header">
+              <td colspan="14">
+                <div class="league-group-title">
+                  <span class="league-group-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+                  <span class="league-group-name">英格兰超级联赛</span>
+                  <span class="league-group-count">12场</span>
+                  <span class="league-group-toggle">▼ 收起</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 4. 已上架+滚球+中场休息 -->
+            <tr class="row-alert row-halftime">
+              <td class="disabled-column">
+                <div class="chk" onclick="toggleCheckbox(this)"></div>
+              </td>
+              <td class="time-cell">
+                <div class="time-date">2026-01-19 <span class="time-bo">BO3</span></div>
+                <div class="time-main">21:00</div>
+                <div class="time-phase break">中场休息</div>
+                <div class="time-update">更新 1s前</div>
+              </td>
+              <td class="league-cell">
+                <div class="league-country">🏴󠁧󠁢󠁥󠁮󠁧󠁿 英格兰</div>
+                <div class="league-cell-name">英格兰超级联赛</div>
+                <div class="league-meta"><span class="league-id">ID: 1001</span><span class="league-level s">S</span>
+                </div>
+              </td>
+              <td class="event-cell">
+                <div class="event-match">
+                  <div class="team-info"><span class="team-name home">阿森纳</span></div>
+                  <div class="score-box">1-1</div>
+                  <div class="team-info"><span class="team-name">切尔西</span><span class="red-card"><span
+                        class="red-card-icon"></span><span class="red-card-count">2</span></span></div>
+                </div>
+                <div class="event-meta">
+                  <span class="event-tag neutral">中立场</span>
+                  <span class="live-stream-icon" title="有直播流">📺</span>
+                  <span class="event-id">ID: 98768</span>
+                </div>
+              </td>
+              <td class="disabled-column">
+                <div class="market-count">15</div>
+                <div class="market-detail">15开/0关</div>
+              </td>
+              <td class="disabled-column">
+                <div class="money-bet">¥320,000</div>
+                <div class="money-payout">¥580,000</div>
+              </td>
+              <td class="disabled-column">
+                <div class="ratio-bar">
+                  <div class="ratio-fill warn" style="width:68%"></div>
+                </div>
+                <span class="ratio-text warn">68%</span>
+              </td>
+              <td class="disabled-column"><span class="pnl-value positive">+¥18,500</span></td>
+              <td class="disabled-column">
+                <div class="alert-tags">
+                  <span class="alert-tag info">🟥红牌提醒</span>
+                  <span class="alert-tag warning">比赛暂停</span>
+                  <span class="alert-tag info">中立场提醒</span>
+                </div>
+              </td>
+              <td><span class="status-tag online">已上架</span></td>
+              <td><span class="status-tag hidden">隐藏</span></td>
+              <td><span class="flight-status on">●</span></td>
+              
+              <td class="trader-cell">
+                <div class="trader-phase-wrapper">
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label prematch">赛前</span>
+                    <div class="trader-info" onclick="showModal('assignModal')">
+                      <span class="trader-avatar" style="background:var(--accent-green);">王</span>
+                      <span class="trader-name">王五</span>
+                    </div>
+                  </div>
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label live">滚球</span>
+                    <div class="trader-info" onclick="showModal('assignModal')">
+                      <span class="trader-avatar" style="background:var(--accent-green);">王</span>
+                      <span class="trader-name">王五</span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="action-cell">
+                <div class="actions"><button class="act-btn warning"
+                    onclick="showModal('offlineModal')">下架</button><button class="act-btn primary">操盘</button><button
+                    class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+              </td>
+            </tr>
+
+            <!-- 5. 已上架+赛前+正常 -->
+            <tr class="row-normal row-prematch">
+              <td class="disabled-column">
+                <div class="chk" onclick="toggleCheckbox(this)"></div>
+              </td>
+              <td class="time-cell">
+                <div class="time-date">2026-01-19 <span class="time-bo">BO1</span></div>
+                <div class="time-main">22:00</div>
+                <div class="time-phase notstarted">未开始</div>
+              </td>
+              <td class="league-cell">
+                <div class="league-country">🏴󠁧󠁢󠁥󠁮󠁧󠁿 英格兰</div>
+                <div class="league-cell-name">英格兰超级联赛</div>
+                <div class="league-meta"><span class="league-id">ID: 1001</span><span class="league-level s">S</span>
+                </div>
+              </td>
+              <td class="event-cell">
+                <div class="event-match">
+                  <div class="team-info"><span class="team-name home">曼联</span></div>
+                  <div class="vs-text">VS</div>
+                  <div class="team-info"><span class="team-name">纽卡斯尔</span></div>
+                </div>
+                <div class="event-meta">
+                  <span class="event-id">ID: 98769</span>
+                </div>
+              </td>
+              <td class="disabled-column">
+                <div class="market-count">18</div>
+                <div class="market-detail">18开/0关</div>
+              </td>
+              <td class="disabled-column">
+                <div class="money-bet">¥85,000</div>
+                <div class="money-payout">¥165,000</div>
+              </td>
+              <td class="disabled-column">
+                <div class="ratio-bar">
+                  <div class="ratio-fill safe" style="width:55%"></div>
+                </div>
+                <span class="ratio-text safe">55%</span>
+              </td>
+              <td class="disabled-column"><span class="pnl-value positive">+¥5,200</span></td>
+              <td class="disabled-column">
+                <div class="alert-tags">
+                  <span class="alert-tag info">⚽进球提醒</span>
+                </div>
+              </td>
+              <td><span class="status-tag online">已上架</span></td>
+              <td><span class="status-tag normal">开盘</span></td>
+              <td><span class="flight-status on">●</span></td>
+              
+              <td class="trader-cell">
+                <div class="trader-phase-wrapper">
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label prematch">赛前</span>
+                    <div class="trader-info" onclick="showModal('assignModal')">
+                      <span class="trader-avatar">张</span>
+                      <span class="trader-name">张三</span>
+                    </div>
+                  </div>
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label live">滚球</span>
+                    <div class="trader-info" onclick="showModal('assignModal')">
+                      <span class="trader-avatar" style="background:var(--accent-blue);">李</span>
+                      <span class="trader-name">李四</span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="action-cell">
+                <div class="actions"><button class="act-btn warning"
+                    onclick="showModal('offlineModal')">下架</button><button class="act-btn primary">操盘</button><button
+                    class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+              </td>
+            </tr>
+
+            <!-- 联赛分组：西甲 -->
+            <tr class="league-group-header">
+              <td colspan="14">
+                <div class="league-group-title">
+                  <span class="league-group-flag">🇪🇸</span>
+                  <span class="league-group-name">西班牙甲级联赛</span>
+                  <span class="league-group-count">10场</span>
+                  <span class="league-group-toggle">▼ 收起</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 6. 延期赛事 -->
+            <tr class="row-delay">
+              <td class="disabled-column">
+                <div class="chk" onclick="toggleCheckbox(this)"></div>
+              </td>
+              <td class="time-cell">
+                <div class="time-date">2026-01-19 <span class="time-bo">BO1</span></div>
+                <div class="time-main" style="text-decoration:line-through;color:var(--text-muted);">20:00</div>
+                <div class="time-phase" style="background:rgba(210,153,34,0.15);color:var(--accent-orange);">⏸ 延期</div>
+              </td>
+              <td class="league-cell">
+                <div class="league-country">🇪🇸 西班牙</div>
+                <div class="league-cell-name">西班牙甲级联赛</div>
+                <div class="league-meta"><span class="league-id">ID: 1002</span><span class="league-level s">S</span>
+                </div>
+              </td>
+              <td class="event-cell">
+                <div class="event-match">
+                  <div class="team-info"><span class="team-name home">皇家马德里</span></div>
+                  <div class="vs-text">VS</div>
+                  <div class="team-info"><span class="team-name">巴塞罗那</span></div>
+                </div>
+                <div class="event-meta">
+                  <span class="event-tag delay">⏸延期</span>
+                  <span class="event-tag hot">🔥热门</span>
+                  <span class="event-id">ID: 98770</span>
+                </div>
+              </td>
+              <td class="disabled-column">
+                <div class="market-count">20</div>
+                <div class="market-detail">0开/20关</div>
+              </td>
+              <td class="disabled-column">
+                <div class="money-bet">¥0</div>
+                <div class="money-payout">¥0</div>
+              </td>
+              <td class="disabled-column">
+                <div class="ratio-bar">
+                  <div class="ratio-fill safe" style="width:50%"></div>
+                </div>
+                <span class="ratio-text safe">50%</span>
+              </td>
+              <td class="disabled-column"><span class="pnl-value">¥0</span></td>
+              <td class="disabled-column">
+                <div class="alert-tags">
+                  <span class="alert-tag danger">延期超时</span>
+                  <span class="alert-tag warning">比赛延期</span>
+                </div>
+              </td>
+              <td><span class="status-tag pending">待上架</span></td>
+              <td><span class="status-tag locked">锁定</span></td>
+              <td><span class="status-tag hidden">隐藏</span></td>
+              
+              <td class="trader-cell">
+                <div class="trader-single">
+                  <div class="trader-info" onclick="showModal('assignModal')">
+                    <span class="trader-avatar">张</span>
+                    <span class="trader-name">张三</span>
+                  </div>
+                </div>
+              </td>
+              <td class="action-cell">
+                <div class="actions"><button class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+              </td>
+            </tr>
+
+            <!-- 7. 已上架+滚球+下半场 -->
+            <tr class="row-normal row-live">
+              <td class="disabled-column">
+                <div class="chk" onclick="toggleCheckbox(this)"></div>
+              </td>
+              <td class="time-cell">
+                <div class="time-date">2026-01-19 <span class="time-bo">BO5</span></div>
+                <div class="time-main">18:30</div>
+                <div class="time-phase live"><span class="dot"></span>下半场 62'</div>
+                <div class="time-update">更新 1s前</div>
+              </td>
+              <td class="league-cell">
+                <div class="league-country">🇪🇸 西班牙</div>
+                <div class="league-cell-name">西班牙甲级联赛</div>
+                <div class="league-meta"><span class="league-id">ID: 1002</span><span class="league-level s">S</span>
+                </div>
+              </td>
+              <td class="event-cell">
+                <div class="event-match">
+                  <div class="team-info"><span class="team-name home">马德里竞技</span></div>
+                  <div class="score-box">2-2</div>
+                  <div class="team-info"><span class="team-name">塞维利亚</span></div>
+                </div>
+                <div class="event-meta">
+                  <span class="live-stream-icon" title="有直播流">📺</span>
+                  <span class="event-id">ID: 98771</span>
+                </div>
+              </td>
+              <td class="disabled-column">
+                <div class="market-count">16</div>
+                <div class="market-detail">16开/0关</div>
+              </td>
+              <td class="disabled-column">
+                <div class="money-bet">¥210,000</div>
+                <div class="money-payout">¥390,000</div>
+              </td>
+              <td class="disabled-column">
+                <div class="ratio-bar">
+                  <div class="ratio-fill safe" style="width:58%"></div>
+                </div>
+                <span class="ratio-text safe">58%</span>
+              </td>
+              <td class="disabled-column"><span class="pnl-value positive">+¥12,300</span></td>
+              <td class="disabled-column">
+                <div class="alert-tags">
+                  <span class="alert-tag warning">赔率异常</span>
+                </div>
+              </td>
+              <td><span class="status-tag online">已上架</span></td>
+              <td><span class="status-tag normal">开盘</span></td>
+              <td><span class="flight-status on">●</span></td>
+              
+              <td class="trader-cell">
+                <div class="trader-phase-wrapper">
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label prematch">赛前</span>
+                    <div class="trader-info" onclick="showModal('assignModal')">
+                      <span class="trader-avatar" style="background:var(--accent-orange);">赵</span>
+                      <span class="trader-name">赵六</span>
+                    </div>
+                  </div>
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label live">滚球</span>
+                    <div class="trader-info" onclick="showModal('assignModal')">
+                      <span class="trader-avatar" style="background:var(--accent-orange);">赵</span>
+                      <span class="trader-name">赵六</span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="action-cell">
+                <div class="actions"><button class="act-btn warning"
+                    onclick="showModal('offlineModal')">下架</button><button class="act-btn primary">操盘</button><button
+                    class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+              </td>
+            </tr>
+
+            <!-- 联赛分组：德甲 -->
+            <tr class="league-group-header">
+              <td colspan="14">
+                <div class="league-group-title">
+                  <span class="league-group-flag">🇩🇪</span>
+                  <span class="league-group-name">德国甲级联赛</span>
+                  <span class="league-group-count">9场</span>
+                  <span class="league-group-toggle">▼ 收起</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- 8. 已下架赛事 -->
+            <tr class="row-normal" style="opacity:0.6;">
+              <td class="disabled-column">
+                <div class="chk" onclick="toggleCheckbox(this)"></div>
+              </td>
+              <td class="time-cell">
+                <div class="time-date">2026-01-19 <span class="time-bo">BO1</span></div>
+                <div class="time-main">21:30</div>
+                <div class="time-phase notstarted">未开始</div>
+              </td>
+              <td class="league-cell">
+                <div class="league-country">🇩🇪 德国</div>
+                <div class="league-cell-name">德国甲级联赛</div>
+                <div class="league-meta"><span class="league-id">ID: 1003</span><span class="league-level s">S</span>
+                </div>
+              </td>
+              <td class="event-cell">
+                <div class="event-match">
+                  <div class="team-info"><span class="team-name home">拜仁慕尼黑</span></div>
+                  <div class="vs-text">VS</div>
+                  <div class="team-info"><span class="team-name">多特蒙德</span></div>
+                </div>
+                <div class="event-meta">
+                  <span class="event-tag hot">🔥热门</span>
+                  <span class="event-id">ID: 98772</span>
+                </div>
+              </td>
+              <td class="disabled-column">
+                <div class="market-count">18</div>
+                <div class="market-detail">0开/18关</div>
+              </td>
+              <td class="disabled-column">
+                <div class="money-bet">¥45,000</div>
+                <div class="money-payout">¥88,000</div>
+              </td>
+              <td class="disabled-column">
+                <div class="ratio-bar">
+                  <div class="ratio-fill safe" style="width:52%"></div>
+                </div>
+                <span class="ratio-text safe">52%</span>
+              </td>
+              <td class="disabled-column"><span class="pnl-value positive">+¥2,100</span></td>
+              <td><span style="color:var(--text-muted);">-</span></td>
+              <td><span class="status-tag offline">已下架</span></td>
+              <td><span class="status-tag locked">锁定</span></td>
+              <td><span class="flight-status on">●</span></td>
+              
+              <td class="trader-cell">
+                <div class="trader-single">
+                  <div class="trader-info" onclick="showModal('assignModal')">
+                    <span class="trader-avatar" style="background:var(--accent-green);">王</span>
+                    <span class="trader-name">王五</span>
+                  </div>
+                </div>
+              </td>
+              <td class="action-cell">
+                <div class="actions"><button class="act-btn success"
+                    onclick="showModal('publishModal')">上架</button><button class="act-btn secondary"
+                    onclick="showModal('logModal')">详情</button></div>
+              </td>
+            </tr>
+
+            <!-- 9. 数据源异常 -->
+            <tr class="row-alert">
+              <td class="disabled-column">
+                <div class="chk" onclick="toggleCheckbox(this)"></div>
+              </td>
+              <td class="time-cell">
+                <div class="time-date">2026-01-19 <span class="time-bo">BO1</span></div>
+                <div class="time-main">22:30</div>
+                <div class="time-phase notstarted">未开始</div>
+              </td>
+              <td class="league-cell">
+                <div class="league-country">🇩🇪 德国</div>
+                <div class="league-cell-name">德国甲级联赛</div>
+                <div class="league-meta"><span class="league-id">ID: 1003</span><span class="league-level s">S</span>
+                </div>
+              </td>
+              <td class="event-cell">
+                <div class="event-match">
+                  <div class="team-info"><span class="team-name home">莱比锡</span></div>
+                  <div class="vs-text">VS</div>
+                  <div class="team-info"><span class="team-name">勒沃库森</span></div>
+                </div>
+                <div class="event-meta">
+                  <span class="event-id">ID: 98773</span>
+                </div>
+              </td>
+              <td class="disabled-column">
+                <div class="market-count">15</div>
+                <div class="market-detail">15开/0关</div>
+              </td>
+              <td class="disabled-column">
+                <div class="money-bet">¥32,000</div>
+                <div class="money-payout">¥62,000</div>
+              </td>
+              <td class="disabled-column">
+                <div class="ratio-bar">
+                  <div class="ratio-fill safe" style="width:48%"></div>
+                </div>
+                <span class="ratio-text safe">48%</span>
+              </td>
+              <td class="disabled-column"><span class="pnl-value positive">+¥1,800</span></td>
+              <td class="disabled-column">
+                <div class="alert-tags">
+                  <span class="alert-tag warning">数据延迟</span>
+                </div>
+              </td>
+              <td><span class="status-tag online">已上架</span></td>
+              <td><span class="status-tag normal">开盘</span></td>
+              <td><span class="status-tag maintenance">延迟</span></td>
+              
+              <td class="trader-cell">
+                <div class="trader-phase-wrapper">
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label prematch">赛前</span>
+                    <div class="trader-info" onclick="showModal('assignModal')">
+                      <span class="trader-avatar" style="background:var(--accent-blue);">李</span>
+                      <span class="trader-name">李四</span>
+                    </div>
+                  </div>
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label live">滚球</span>
+                    <span class="trader-unassigned" onclick="showModal('assignModal')">未分配</span>
+                  </div>
+                </div>
+              </td>
+              <td class="action-cell">
+                <div class="actions"><button class="act-btn warning"
+                    onclick="showModal('offlineModal')">下架</button><button class="act-btn primary">操盘</button><button
+                    class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+              </td>
+            </tr>
+
+            <!-- 10. 盘口锁定 -->
+            <tr class="row-normal row-prematch">
+              <td class="disabled-column">
+                <div class="chk" onclick="toggleCheckbox(this)"></div>
+              </td>
+              <td class="time-cell">
+                <div class="time-date">2026-01-19 <span class="time-bo">BO3</span></div>
+                <div class="time-main">23:00</div>
+                <div class="time-phase notstarted">未开始</div>
+              </td>
+              <td class="league-cell">
+                <div class="league-country">🇫🇷 法国</div>
+                <div class="league-cell-name">法国甲级联赛</div>
+                <div class="league-meta"><span class="league-id">ID: 1005</span><span class="league-level s">S</span>
+                </div>
+              </td>
+              <td class="event-cell">
+                <div class="event-match">
+                  <div class="team-info"><span class="team-name home">巴黎圣日耳曼</span></div>
+                  <div class="vs-text">VS</div>
+                  <div class="team-info"><span class="team-name">马赛</span></div>
+                </div>
+                <div class="event-meta">
+                  <span class="event-tag hot">🔥热门</span>
+                  <span class="event-id">ID: 98774</span>
+                </div>
+              </td>
+              <td class="disabled-column">
+                <div class="market-count">18</div>
+                <div class="market-detail">0开/18关</div>
+              </td>
+              <td class="disabled-column">
+                <div class="money-bet">¥15,000</div>
+                <div class="money-payout">¥29,000</div>
+              </td>
+              <td class="disabled-column">
+                <div class="ratio-bar">
+                  <div class="ratio-fill safe" style="width:51%"></div>
+                </div>
+                <span class="ratio-text safe">51%</span>
+              </td>
+              <td class="disabled-column"><span class="pnl-value positive">+¥850</span></td>
+              <td><span style="color:var(--text-muted);">-</span></td>
+              <td><span class="status-tag online">已上架</span></td>
+              <td><span class="status-tag locked">🔒锁定</span></td>
+              <td><span class="flight-status on">●</span></td>
+              
+              <td class="trader-cell">
+                <div class="trader-phase-wrapper">
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label prematch">赛前</span>
+                    <div class="trader-info" onclick="showModal('assignModal')">
+                      <span class="trader-avatar">张</span>
+                      <span class="trader-name">张三</span>
+                    </div>
+                  </div>
+                  <div class="trader-phase-row">
+                    <span class="trader-phase-label live">滚球</span>
+                    <div class="trader-info" onclick="showModal('assignModal')">
+                      <span class="trader-avatar">张</span>
+                      <span class="trader-name">张三</span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="action-cell">
+                <div class="actions"><button class="act-btn warning"
+                    onclick="showModal('offlineModal')">下架</button><button class="act-btn primary">操盘</button><button
+                    class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 空状态 -->
+        <div class="empty-state" id="emptyState" style="display:none;">
+          <div class="empty-icon">📭</div>
+          <div class="empty-title">暂无符合条件的赛事</div>
+          <div class="empty-desc">尝试调整筛选条件或切换日期</div>
+          <button class="btn btn-secondary" onclick="resetFilters()">重置筛选</button>
+        </div>
+
+        <!-- 分页器 -->
+        <div class="pagination">
+          <div class="page-info">
+            共 <span class="page-total">156</span> 场赛事，每页显示
+            <select class="page-size" onchange="changePageSize(this.value)">
+              <option value="20">20</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+            </select>
+            条
+          </div>
+          <div class="page-nav">
+            <button class="page-btn" onclick="goToPage('first')" title="首页">«</button>
+            <button class="page-btn" onclick="goToPage('prev')" title="上一页">‹</button>
+            <span class="page-numbers">
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <span class="page-ellipsis">...</span>
+              <button class="page-btn">4</button>
+            </span>
+            <button class="page-btn" onclick="goToPage('next')" title="下一页">›</button>
+            <button class="page-btn" onclick="goToPage('last')" title="末页">»</button>
+            <span class="page-jump">
+              跳至 <input type="number" class="page-input" value="1" min="1" max="4"> 页
+              <button class="btn btn-sm btn-secondary" onclick="jumpToPage()">确定</button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 加载遮罩 -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">加载中...</div>
+  </div>
+
+  <!-- 批量操作栏（底部浮动弹窗） -->
+  <div class="batch-bar" id="batchBar">
+    <div class="batch-info">
+      已选择 <span class="batch-count" id="selectedCount">0</span> 场赛事
+    </div>
+    <div class="batch-actions">
+      <button class="btn btn-success" onclick="showModal('publishModal')">批量上架</button>
+      <button class="btn btn-secondary" onclick="showModal('offlineModal')">批量下架</button>
+      <button class="btn btn-secondary" onclick="showModal('assignModal')">分配操盘手</button>
+      <button class="btn btn-secondary" onclick="clearSelection()">取消选择</button>
+    </div>
+    <button class="batch-close" onclick="clearSelection()">×</button>
+  </div>
+
+  <!-- 上架确认弹窗 -->
+  <div class="modal-overlay" id="publishModal" onclick="hideModalOnOverlay(event, 'publishModal')">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">✅ 确认上架赛事</h3>
+        <button class="modal-close" onclick="hideModal('publishModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-info">
+          <div class="modal-info-row">
+            <span class="modal-info-label">选中赛事</span>
+            <span class="modal-info-value">3 场</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">已滚球</span>
+            <span class="modal-info-value" style="color:var(--accent-red);">1 场</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">即将开赛（10分钟内）</span>
+            <span class="modal-info-value" style="color:var(--accent-orange);">1 场</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">盘口初始状态</label>
+          <div class="radio-group">
+            <label class="radio-item">
+              <input type="radio" name="marketInitStatus" value="follow" checked>
+              <span class="radio-label">跟随数据源（推荐）</span>
+              <span class="radio-desc">上架后盘口跟随IM状态，可立即投注</span>
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="marketInitStatus" value="locked">
+              <span class="radio-label">锁定</span>
+              <span class="radio-desc">盘口可见但暂停投注，需手动解锁</span>
+            </label>
+            <label class="radio-item">
+              <input type="radio" name="marketInitStatus" value="hidden">
+              <span class="radio-label">隐藏</span>
+              <span class="radio-desc">盘口对玩家不可见，需手动取消隐藏</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-warning">
+          <span>⚠️</span>
+          <div>
+            <strong>注意：</strong>上架后赛事将在客户端展示。「跟随数据源」适合常规低风险赛事；「锁定」盘口可见但暂停投注，需手动解锁；「隐藏」客户端不可见，需手动取消隐藏。
+          </div>
+        </div>
+        <div class="modal-info" style="margin-top:16px;background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.3);border-radius:6px;padding:12px;"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">💡</span><span style="color:var(--accent-blue);font-size:13px;"><strong>提示：</strong>请确保上架前已分配操盘手，可在批量操作栏点击「分配操盘手」进行分配。</span></div></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('publishModal')">取消</button>
+        <button class="btn btn-primary"
+          onclick="hideModal('publishModal'); showToast('success', '上架成功', '3场赛事已成功上架')">确认上架</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分配操盘手弹窗（支持按玩法分配） -->
+  <div class="modal-overlay" id="assignModal" onclick="hideModalOnOverlay(event, 'assignModal')">
+    <div class="modal large">
+      <div class="modal-header">
+        <h3 class="modal-title">👤 分配操盘手</h3>
+        <button class="modal-close" onclick="hideModal('assignModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <!-- 赛事信息 -->
+        <div class="modal-info" style="margin-bottom: 16px;">
+          <div class="modal-info-row">
+            <span class="modal-info-label">已选赛事</span>
+            <span class="modal-info-value">3 场</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">当前操盘手</span>
+            <span class="modal-info-value">张三（2场）、未分配（1场）</span>
+          </div>
+        </div>
+
+        <!-- 按玩法分配模式 - 穿梭框 -->
+        <div class="bettype-assign-section" id="bettypeAssignSection">
+          <!-- 阶段切换Tab -->
+          <div class="phase-tabs-inline">
+            <div class="phase-tab-inline active" onclick="switchTransferPhase(this, 'prematch')">📅 赛前阶段</div>
+            <div class="phase-tab-inline live" onclick="switchTransferPhase(this, 'live')">🔴 滚球阶段</div>
+          </div>
+
+          <!-- 穿梭框 -->
+          <div class="transfer-box">
+            <!-- 左侧：可分配玩法 -->
+            <div class="transfer-panel">
+              <div class="transfer-panel-header">
+                <span>可分配玩法</span>
+                <span class="transfer-panel-count" id="availableCount">16 个</span>
+              </div>
+              <div class="transfer-panel-list" id="availableBetTypes">
+                <div class="transfer-item" onclick="toggleTransferItem(this)" data-id="1">
+                  <div class="transfer-item-checkbox"></div>
+                  <span class="transfer-item-id">1</span>
+                  <span class="transfer-item-name">让球盘 Handicap</span>
+                </div>
+                <div class="transfer-item" onclick="toggleTransferItem(this)" data-id="3">
+                  <div class="transfer-item-checkbox"></div>
+                  <span class="transfer-item-id">3</span>
+                  <span class="transfer-item-name">大小球 Over/Under</span>
+                </div>
+                <div class="transfer-item" onclick="toggleTransferItem(this)" data-id="5">
+                  <div class="transfer-item-checkbox"></div>
+                  <span class="transfer-item-id">5</span>
+                  <span class="transfer-item-name">独赢 1X2</span>
+                </div>
+                <div class="transfer-item" onclick="toggleTransferItem(this)" data-id="7">
+                  <div class="transfer-item-checkbox"></div>
+                  <span class="transfer-item-id">7</span>
+                  <span class="transfer-item-name">单双 Odd/Even</span>
+                </div>
+                <div class="transfer-item" onclick="toggleTransferItem(this)" data-id="15">
+                  <div class="transfer-item-checkbox"></div>
+                  <span class="transfer-item-id">15</span>
+                  <span class="transfer-item-name">半场让球 1H Handicap</span>
+                </div>
+                <div class="transfer-item" onclick="toggleTransferItem(this)" data-id="17">
+                  <div class="transfer-item-checkbox"></div>
+                  <span class="transfer-item-id">17</span>
+                  <span class="transfer-item-name">半场大小 1H O/U</span>
+                </div>
+                <div class="transfer-item" onclick="toggleTransferItem(this)" data-id="20">
+                  <div class="transfer-item-checkbox"></div>
+                  <span class="transfer-item-id">20</span>
+                  <span class="transfer-item-name">角球让球 Corner HDP</span>
+                </div>
+                <div class="transfer-item" onclick="toggleTransferItem(this)" data-id="21">
+                  <div class="transfer-item-checkbox"></div>
+                  <span class="transfer-item-id">21</span>
+                  <span class="transfer-item-name">角球大小 Corner O/U</span>
+                </div>
+                <div class="transfer-item" onclick="toggleTransferItem(this)" data-id="120">
+                  <div class="transfer-item-checkbox"></div>
+                  <span class="transfer-item-id">120</span>
+                  <span class="transfer-item-name">罚牌数 Booking O/U</span>
+                </div>
+                <div class="transfer-item" onclick="toggleTransferItem(this)" data-id="126">
+                  <div class="transfer-item-checkbox"></div>
+                  <span class="transfer-item-id">126</span>
+                  <span class="transfer-item-name">双重机会 Double Chance</span>
+                </div>
+              </div>
+              <div class="transfer-quick-btns">
+                <button class="transfer-quick-btn" onclick="selectBetTypeGroup('core')">核心玩法</button>
+                <button class="transfer-quick-btn" onclick="selectBetTypeGroup('half')">半场玩法</button>
+                <button class="transfer-quick-btn" onclick="selectBetTypeGroup('corner')">角球玩法</button>
+                <button class="transfer-quick-btn" onclick="selectBetTypeGroup('special')">特殊玩法</button>
+                <button class="transfer-quick-btn" onclick="selectBetTypeGroup('all')">全选</button>
+                <button class="transfer-quick-btn" onclick="selectBetTypeGroup('none')">清空</button>
+              </div>
+            </div>
+
+            <!-- 中间：操作区 -->
+            <div class="transfer-operations">
+              <select class="transfer-trader-select" id="transferTraderSelect">
+                <option value="">选择操盘手</option>
+                <option value="zhangsan">张三</option>
+                <option value="lisi">李四</option>
+                <option value="wangwu">王五</option>
+                <option value="zhaoliu">赵六</option>
+              </select>
+              <button class="transfer-op-btn primary" onclick="assignSelectedBetTypes()">分配 →</button>
+              <button class="transfer-op-btn" onclick="removeSelectedAssigned()">← 移除</button>
+            </div>
+
+            <!-- 右侧：已分配玩法 -->
+            <div class="transfer-panel">
+              <div class="transfer-panel-header">
+                <span>已分配玩法</span>
+                <span class="transfer-panel-count" id="assignedCount">6 个</span>
+              </div>
+              <div class="transfer-panel-list" id="assignedBetTypes">
+                <div class="assigned-group" data-trader="zhangsan">
+                  <div class="assigned-group-header">
+                    <div class="assigned-group-avatar">张</div>
+                    <span class="assigned-group-name">张三</span>
+                    <span class="assigned-group-count">4 个玩法</span>
+                  </div>
+                  <div class="assigned-item" onclick="toggleAssignedItem(this)" data-id="1">
+                    <span class="assigned-item-phase prematch">赛前</span>
+                    <span>让球盘</span>
+                  </div>
+                  <div class="assigned-item" onclick="toggleAssignedItem(this)" data-id="3">
+                    <span class="assigned-item-phase prematch">赛前</span>
+                    <span>大小球</span>
+                  </div>
+                  <div class="assigned-item" onclick="toggleAssignedItem(this)" data-id="5">
+                    <span class="assigned-item-phase prematch">赛前</span>
+                    <span>独赢 1X2</span>
+                  </div>
+                  <div class="assigned-item" onclick="toggleAssignedItem(this)" data-id="7">
+                    <span class="assigned-item-phase prematch">赛前</span>
+                    <span>单双</span>
+                  </div>
+                </div>
+                <div class="assigned-group" data-trader="lisi">
+                  <div class="assigned-group-header">
+                    <div class="assigned-group-avatar" style="background:var(--accent-purple);">李</div>
+                    <span class="assigned-group-name" style="color:var(--accent-purple);">李四</span>
+                    <span class="assigned-group-count">2 个玩法</span>
+                  </div>
+                  <div class="assigned-item" onclick="toggleAssignedItem(this)" data-id="20">
+                    <span class="assigned-item-phase prematch">赛前</span>
+                    <span>角球让球</span>
+                  </div>
+                  <div class="assigned-item" onclick="toggleAssignedItem(this)" data-id="21">
+                    <span class="assigned-item-phase prematch">赛前</span>
+                    <span>角球大小</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分配汇总 -->
+        <div class="assign-summary" id="assignSummary">
+          <div class="assign-summary-title">📋 分配汇总</div>
+          <div class="assign-summary-list">
+            <div class="assign-summary-item">
+              <span class="assign-summary-bettype">赛前全部:</span>
+              <span class="assign-summary-trader">张三</span>
+            </div>
+            <div class="assign-summary-item">
+              <span class="assign-summary-bettype">滚球全部:</span>
+              <span class="assign-summary-trader">李四</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('assignModal')">取消</button>
+        <button class="btn btn-primary"
+          onclick="hideModal('assignModal'); showToast('success', '分配成功', '已将3场赛事分配给指定操盘手')">确认分配</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 操盘日志弹窗 -->
+  <div class="modal-overlay" id="logModal" onclick="hideModalOnOverlay(event, 'logModal')">
+    <div class="modal xlarge">
+      <div class="modal-header">
+        <h3 class="modal-title">📋 操盘日志</h3>
+        <button class="modal-close" onclick="hideModal('logModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <!-- 筛选区 -->
+        <div class="log-filter-row">
+          <div class="log-filter-item">
+            <label>时间范围</label>
+            <select class="form-select">
+              <option value="1h">最近1小时</option>
+              <option value="today" selected>今天</option>
+              <option value="3d">最近3天</option>
+              <option value="custom">自定义</option>
+            </select>
+          </div>
+          <div class="log-filter-item">
+            <label>操作类型</label>
+            <select class="form-select">
+              <option value="all">全部</option>
+              <option value="status">状态变更</option>
+              <option value="odds">赔率调整</option>
+              <option value="line">盘口线调整</option>
+              <option value="payout">返奖率调整</option>
+              <option value="ao">数据源开关变更</option>
+              <option value="fly">飞单开关变更</option>
+              <option value="operator">操盘手变更</option>
+            </select>
+          </div>
+          <div class="log-filter-item">
+            <label>操作来源</label>
+            <select class="form-select">
+              <option value="all">全部</option>
+              <option value="manual">人工</option>
+              <option value="ao">数据源</option>
+              <option value="risk">风控</option>
+              <option value="datasource">数据源</option>
+              <option value="system">系统</option>
+              <option value="cascade">上级联动</option>
+            </select>
+          </div>
+          <div class="log-filter-item">
+            <label>盘口ID</label>
+            <input type="text" class="form-input" placeholder="输入盘口ID..." style="width: 140px;">
+          </div>
+          <button class="btn btn-primary btn-sm">🔍 查询</button>
+          <button class="btn btn-secondary btn-sm">📥 导出</button>
+        </div>
+        <!-- 日志列表 -->
+        <div class="log-list">
+          <table class="log-table">
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>操作类型</th>
+                <th>盘口</th>
+                <th>操作详情</th>
+                <th>操作人</th>
+                <th>来源</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="log-time">18:42:18</td>
+                <td><span class="log-type status">状态变更</span></td>
+                <td>全场让球</td>
+                <td>开盘 → 隐藏（原因: 单边超限）</td>
+                <td>张三</td>
+                <td><span class="log-source manual">人工</span></td>
+              </tr>
+              <tr>
+                <td class="log-time">18:40:05</td>
+                <td><span class="log-type odds">赔率调整</span></td>
+                <td>全场让球</td>
+                <td>主队(-0.5) 赔率 0.90 → 0.88</td>
+                <td>数据源</td>
+                <td><span class="log-source ao">数据源</span></td>
+              </tr>
+              <tr>
+                <td class="log-time">18:34:52</td>
+                <td><span class="log-type line">盘口线调整</span></td>
+                <td>全场让球</td>
+                <td>盘口线 -0.25 → -0.5</td>
+                <td>张三</td>
+                <td><span class="log-source manual">人工</span></td>
+              </tr>
+              <tr>
+                <td class="log-time">18:32:15</td>
+                <td><span class="log-type payout">返奖率调整</span></td>
+                <td>全场大小</td>
+                <td>返奖率 98.0% → 97.2%</td>
+                <td>张三</td>
+                <td><span class="log-source manual">人工</span></td>
+              </tr>
+              <tr>
+                <td class="log-time">18:30:00</td>
+                <td><span class="log-type ao-toggle">数据源开关变更</span></td>
+                <td>全场让球</td>
+                <td>数据源跟随: 开启 → 关盘</td>
+                <td>李四</td>
+                <td><span class="log-source manual">人工</span></td>
+              </tr>
+              <tr>
+                <td class="log-time">18:22:33</td>
+                <td><span class="log-type status">状态变更</span></td>
+                <td>全场大小</td>
+                <td>隐藏 → 开盘（数据源恢复）</td>
+                <td>系统</td>
+                <td><span class="log-source datasource">数据源</span></td>
+              </tr>
+              <tr>
+                <td class="log-time">18:15:00</td>
+                <td><span class="log-type fly-toggle">飞单开关变更</span></td>
+                <td>全场让球</td>
+                <td>飞单开关: 关盘 → 开启</td>
+                <td>王主管</td>
+                <td><span class="log-source risk">风控</span></td>
+              </tr>
+              <tr>
+                <td class="log-time">17:58:22</td>
+                <td><span class="log-type operator">操盘手变更</span></td>
+                <td>-</td>
+                <td>滚球操盘手: 李四 → 张三</td>
+                <td>王主管</td>
+                <td><span class="log-source cascade">上级联动</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- 分页 -->
+        <div class="log-pagination">
+          <span style="font-size: 11px; color: var(--text-muted);">共 156 条记录，第 1/16 页</span>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" disabled>上一页</button>
+            <button class="btn btn-primary btn-sm">下一页</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 一键锁盘确认弹窗 -->
+
+  <div class="modal-overlay" id="lockAllModal" onclick="hideModalOnOverlay(event, 'lockAllModal')">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">🔒 一键锁盘确认</h3>
+        <button class="modal-close" onclick="hideModal('lockAllModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-danger">
+          <span>⚠️</span>
+          <div>
+            <strong>锁定是高危操作，锁定后：</strong><br>
+            • 所有滚球赛事盘口将停止接受投注<br>
+            • 数据源状态变更不会自动解锁<br>
+            • 必须由主管或风控手动解锁
+          </div>
+        </div>
+
+        <div class="modal-info">
+          <div class="modal-info-row">
+            <span class="modal-info-label">将影响赛事</span>
+            <span class="modal-info-value" style="color:var(--accent-red);">8 场</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">当前总投注额</span>
+            <span class="modal-info-value">¥1,250,000</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('lockAllModal')">取消</button>
+        <button class="btn btn-danger"
+          onclick="hideModal('lockAllModal'); showToast('warning', '已锁盘', '所有滚球赛事已锁定')">确认锁盘</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 下架确认弹窗 -->
+  <div class="modal-overlay" id="offlineModal" onclick="hideModalOnOverlay(event, 'offlineModal')">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">📤 确认下架赛事</h3>
+        <button class="modal-close" onclick="hideModal('offlineModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-warning">
+          <span>⚠️</span>
+          <div>
+            <strong>注意：</strong>下架后所有盘口将变为隐藏状态（客户端不可见），已有投注不受影响。
+          </div>
+        </div>
+
+        <div class="modal-info">
+          <div class="modal-info-row">
+            <span class="modal-info-label">选中赛事</span>
+            <span class="modal-info-value">2 场</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">当前投注额</span>
+            <span class="modal-info-value">¥85,000</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">未结算注单</span>
+            <span class="modal-info-value">126 笔</span>
+          </div>
+        </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('offlineModal')">取消</button>
+        <button class="btn btn-danger"
+          onclick="hideModal('offlineModal'); showToast('success', '下架成功', '2场赛事已下架，盘口已隐藏')">确认下架</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 赛事预览浮层 -->
+  <div class="event-preview" id="eventPreview" style="display:none; top:200px; left:400px;">
+    <div class="event-preview-header">
+      <span class="event-preview-title">曼城 vs 利物浦</span>
+      <button class="event-preview-close" onclick="hideEventPreview()">×</button>
+    </div>
+    <div class="event-preview-body">
+      <div class="preview-section">
+        <div class="preview-section-title">主要盘口赔率</div>
+        <div class="preview-odds-grid">
+          <div class="preview-odds-item">
+            <div class="preview-odds-label">主胜</div>
+            <div class="preview-odds-value">1.65</div>
+            <div class="preview-odds-ratio">45%</div>
+          </div>
+          <div class="preview-odds-item">
+            <div class="preview-odds-label">平局</div>
+            <div class="preview-odds-value">3.80</div>
+            <div class="preview-odds-ratio">18%</div>
+          </div>
+          <div class="preview-odds-item">
+            <div class="preview-odds-label">客胜</div>
+            <div class="preview-odds-value">4.20</div>
+            <div class="preview-odds-ratio">37%</div>
+          </div>
+        </div>
+      </div>
+      <div class="preview-section">
+        <div class="preview-section-title">让球盘 (-0.5)</div>
+        <div class="preview-odds-grid" style="grid-template-columns: repeat(2, 1fr);">
+          <div class="preview-odds-item">
+            <div class="preview-odds-label">主队</div>
+            <div class="preview-odds-value">1.85</div>
+            <div class="preview-odds-ratio" style="color:var(--accent-red);">72%</div>
+          </div>
+          <div class="preview-odds-item">
+            <div class="preview-odds-label">客队</div>
+            <div class="preview-odds-value">1.95</div>
+            <div class="preview-odds-ratio">28%</div>
+          </div>
+        </div>
+      </div>
+      <div class="preview-section">
+        <div class="preview-section-title">最近操盘日志</div>
+        <div class="preview-log-item">
+          <span class="preview-log-time">19:34:52</span>
+          <span class="preview-log-content">主胜赔率 1.68→1.65（系统自动）</span>
+        </div>
+        <div class="preview-log-item">
+          <span class="preview-log-time">19:32:15</span>
+          <span class="preview-log-content">比分更新 2-1（进球）</span>
+        </div>
+        <div class="preview-log-item">
+          <span class="preview-log-time">19:28:30</span>
+          <span class="preview-log-content">利物浦红牌（数据源）</span>
+        </div>
+      </div>
+      <div class="preview-actions">
+        <button class="btn btn-primary btn-sm">进入操盘</button>
+        <button class="btn btn-secondary btn-sm" onclick="location.href='settlement-detail.html'">结算详情</button>
+        <button class="btn btn-secondary btn-sm" onclick="showModal('logModal')">完整日志</button>
+        <button class="btn btn-secondary btn-sm">隐藏盘口</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 下架确认弹窗 -->
+  <div class="modal-overlay" id="offlineModal" onclick="hideModalOnOverlay(event, 'offlineModal')">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">⚠️ 确认下架赛事</h3>
+        <button class="modal-close" onclick="hideModal('offlineModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-info">
+          <div class="modal-info-row">
+            <span class="modal-info-label">选中赛事</span>
+            <span class="modal-info-value">1 场</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">当前投注额</span>
+            <span class="modal-info-value" style="color:var(--accent-cyan);">¥580,000</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">未结算注单</span>
+            <span class="modal-info-value" style="color:var(--accent-orange);">127 笔</span>
+          </div>
+        </div>
+
+        <div class="modal-warning" style="background:rgba(248,81,73,0.1);border-color:var(--accent-red);">
+          <span>⚠️</span>
+          <div>
+            <strong>警告：</strong>下架后所有盘口将变为隐藏状态（客户端不可见），停止接受新投注。已有注单不受影响，比赛结束后正常结算。
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('offlineModal')">取消</button>
+        <button class="btn btn-danger"
+          onclick="hideModal('offlineModal'); showToast('success', '下架成功', '赛事已下架，盘口已隐藏')">确认下架</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 列配置弹窗 -->
+  <div class="modal-overlay" id="columnConfigModal" onclick="hideModalOnOverlay(event, 'columnConfigModal')">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ 列配置</h3>
+        <button class="modal-close" onclick="hideModal('columnConfigModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-hint" style="margin-bottom:16px;">拖拽调整列顺序，取消勾选隐藏列。带🔒的列不可隐藏。</div>
+        <div class="column-list">
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked disabled>
+            <span class="column-item-name">开赛时间</span>
+            <span class="column-item-lock">🔒</span>
+          </div>
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked disabled>
+            <span class="column-item-name">联赛</span>
+            <span class="column-item-lock">🔒</span>
+          </div>
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked disabled>
+            <span class="column-item-name">赛事</span>
+            <span class="column-item-lock">🔒</span>
+          </div>
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked>
+            <span class="column-item-name">盘口数</span>
+          </div>
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked>
+            <span class="column-item-name">投注/赔付</span>
+          </div>
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked>
+            <span class="column-item-name">单边%</span>
+          </div>
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked>
+            <span class="column-item-name">盈亏</span>
+          </div>
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked>
+            <span class="column-item-name">告警</span>
+          </div>
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked>
+            <span class="column-item-name">上架</span>
+          </div>
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked>
+            <span class="column-item-name">盘口状态</span>
+          </div>
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked>
+            <span class="column-item-name">数据源</span>
+          </div>
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked>
+            <span class="column-item-name">操盘手</span>
+          </div>
+          <div class="column-item">
+            <span class="column-item-drag">⋮⋮</span>
+            <input type="checkbox" class="column-item-checkbox" checked disabled>
+            <span class="column-item-name">操作</span>
+            <span class="column-item-lock">🔒</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="resetColumns()">恢复默认</button>
+        <button class="btn btn-primary"
+          onclick="hideModal('columnConfigModal'); showToast('success', '保存成功', '列配置已更新')">保存配置</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 实时事件提醒（进球/红牌） -->
+  <div class="event-alert" id="eventAlert" style="display:none;">
+    <button class="event-alert-close" onclick="hideEventAlert()">×</button>
+    <div class="event-alert-icon">⚽</div>
+    <div class="event-alert-title">进球提醒</div>
+    <div class="event-alert-match">曼城 vs 利物浦</div>
+    <div class="event-alert-detail">曼城 进球！当前比分 2-1</div>
+  </div>
+
+  <!-- 快捷键提示 -->
+  <div class="shortcut-hint" id="shortcutHint" style="display:none;">
+    <div class="shortcut-hint-title">键盘快捷键</div>
+    <div class="shortcut-item"><span>刷新列表</span><span class="shortcut-key">R</span></div>
+    <div class="shortcut-item"><span>全选/取消</span><span class="shortcut-key">Ctrl+A</span></div>
+    <div class="shortcut-item"><span>批量上架</span><span class="shortcut-key">Ctrl+U</span></div>
+    <div class="shortcut-item"><span>显示/隐藏快捷键</span><span class="shortcut-key">?</span></div>
+  </div>
+
+  <!-- Toast通知容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ========== 赔率制式切换（全局设置） ==========
+    let currentOddsFormat = localStorage.getItem('oddsFormat') || 'hk';
+
+    // 初始化赔率制式
+    function initOddsFormat() {
+      const format = localStorage.getItem('oddsFormat') || 'hk';
+      currentOddsFormat = format;
+
+      // 更新按钮激活状态
+      document.querySelectorAll('.odds-format-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.format === format);
+      });
+    }
+
+    // 切换赔率制式
+    function switchOddsFormat(format) {
+      if (format === currentOddsFormat) return;
+
+      currentOddsFormat = format;
+      localStorage.setItem('oddsFormat', format);
+
+      // 更新按钮激活状态
+      document.querySelectorAll('.odds-format-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.format === format);
+      });
+
+      const formatNames = { hk: '港赔', decimal: '欧赔' };
+      showToast('success', '赔率制式', `已切换为${formatNames[format]}`);
+    }
+
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', initOddsFormat);
+
+    // ========== 侧边栏折叠功能 ==========
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('collapsed');
+    }
+
+    // ========== 运动类型树展开/折叠 ==========
+    function toggleSport(el) {
+      el.classList.toggle('expanded');
+      const expand = el.querySelector('.sport-expand');
+      if (expand) {
+        expand.textContent = el.classList.contains('expanded') ? '▼' : '▶';
+      }
+    }
+
+    // ========== 服务器时间更新 ==========
+    function updateServerTime() {
+      const now = new Date();
+      const timeStr = now.toISOString().replace('T', ' ').substring(0, 19);
+      document.getElementById('serverTime').textContent = timeStr;
+    }
+    setInterval(updateServerTime, 1000);
+
+    // ========== 复选框功能 ==========
+    let selectedCount = 0;
+
+    function toggleCheckbox(el) {
+      el.classList.toggle('checked');
+      selectedCount += el.classList.contains('checked') ? 1 : -1;
+      updateBatchBar();
+    }
+
+    function toggleAllCheckbox(el) {
+      const isChecked = el.classList.toggle('checked');
+      document.querySelectorAll('tbody .chk').forEach(chk => {
+        if (isChecked) {
+          chk.classList.add('checked');
+        } else {
+          chk.classList.remove('checked');
+        }
+      });
+      selectedCount = isChecked ? document.querySelectorAll('tbody .chk').length : 0;
+      updateBatchBar();
+    }
+
+    function updateBatchBar() {
+      document.getElementById('selectedCount').textContent = selectedCount;
+      document.getElementById('batchBar').classList.toggle('active', selectedCount > 0);
+    }
+
+    function clearSelection() {
+      document.querySelectorAll('.chk.checked').forEach(chk => {
+        chk.classList.remove('checked');
+      });
+      selectedCount = 0;
+      updateBatchBar();
+    }
+
+    // ========== 日期时间筛选（精确到秒） ==========
+    let isCustomDateActive = false;
+
+    // 格式化日期时间为 datetime-local 格式 (YYYY-MM-DDTHH:mm:ss)
+    function formatDateTimeLocal(date, isEndOfDay = false) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const time = isEndOfDay ? '23:59:59' : '00:00:00';
+      return `${year}-${month}-${day}T${time}`;
+    }
+
+    function selectDate(type) {
+      document.querySelectorAll('.date-btn').forEach(btn => {
+        btn.classList.remove('active', 'disabled');
+      });
+      event.target.classList.add('active');
+
+      const today = new Date();
+      let startDate = new Date(today);
+      let endDate = new Date(today);
+
+      switch (type) {
+        case 'yesterday':
+          startDate.setDate(today.getDate() - 1);
+          endDate.setDate(today.getDate() - 1);
+          break;
+        case 'tomorrow':
+          startDate.setDate(today.getDate() + 1);
+          endDate.setDate(today.getDate() + 1);
+          break;
+        case 'dayafter':
+          startDate.setDate(today.getDate() + 2);
+          endDate.setDate(today.getDate() + 2);
+          break;
+      }
+
+      document.getElementById('dateFrom').value = formatDateTimeLocal(startDate, false);
+      document.getElementById('dateTo').value = formatDateTimeLocal(endDate, true);
+
+      document.querySelectorAll('.date-input').forEach(input => {
+        input.classList.remove('custom-active');
+      });
+      document.getElementById('dateHint').classList.remove('active');
+      isCustomDateActive = false;
+    }
+
+    function applyDateRange() {
+      document.querySelectorAll('.date-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('disabled');
+      });
+      document.querySelectorAll('.date-input').forEach(input => {
+        input.classList.add('custom-active');
+      });
+      document.getElementById('dateHint').classList.add('active');
+      isCustomDateActive = true;
+
+      const fromVal = document.getElementById('dateFrom').value;
+      const toVal = document.getElementById('dateTo').value;
+      const fromDisplay = fromVal.replace('T', ' ');
+      const toDisplay = toVal.replace('T', ' ');
+      showToast('success', '日期时间筛选已应用', `筛选范围: ${fromDisplay} 至 ${toDisplay}`);
+    }
+
+    // ========== 比赛进程Tab切换 ==========
+    function selectPhase(el, phase) {
+      document.querySelectorAll('.phase-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      el.classList.add('active');
+    }
+
+    // ========== 状态筛选切换 ==========
+    function toggleStatus(el) {
+      const parent = el.parentElement;
+      parent.querySelectorAll('.status-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      el.classList.add('active');
+    }
+
+    // ========== 快捷场景筛选 ==========
+    document.querySelectorAll('.quick-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // 重置日期筛选
+        document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('disabled', 'active'));
+        document.querySelector('.date-btn:nth-child(3)').classList.add('active'); // 今日
+      });
+    });
+
+    // ========== 操盘手选择 ==========
+    function toggleTraderSelect(el) {
+      document.querySelectorAll('.trader-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      el.classList.add('selected');
+    }
+
+    // ========== 阶段分配Tab ==========
+    function selectAssignPhase(el, phase) {
+      document.querySelectorAll('.phase-assign-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      el.classList.add('active');
+    }
+
+    // ========== 分配模式切换 ==========
+    function switchAssignMode(el, mode) {
+      // 切换Tab样式
+      document.querySelectorAll('.assign-mode-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      el.classList.add('active');
+
+      // 切换内容显示
+      const unifiedSection = document.getElementById('unifiedAssignSection');
+      const bettypeSection = document.getElementById('bettypeAssignSection');
+
+      if (mode === 'unified') {
+        if (unifiedSection) unifiedSection.style.display = 'block';
+        if (bettypeSection) bettypeSection.style.display = 'none';
+      } else {
+        if (unifiedSection) unifiedSection.style.display = 'none';
+        if (bettypeSection) bettypeSection.style.display = 'block';
+      }
+
+      updateAssignSummary();
+    }
+
+    // ========== 应用到所有赛前玩法 ==========
+    function applyToAllPrematch(btn) {
+      const row = btn.closest('.bettype-assign-row');
+      if (!row) return;
+
+      const select = row.querySelector('.bettype-select');
+      if (!select) return;
+
+      const selectedValue = select.value;
+
+      // 获取赛前区域的所有选择框
+      const prematchSection = document.querySelector('.bettype-phase-section:first-of-type');
+      if (prematchSection) {
+        prematchSection.querySelectorAll('.bettype-select').forEach(s => {
+          s.value = selectedValue;
+        });
+      }
+
+      updateAssignSummary();
+      showToast('success', '批量应用', '已将操盘手设置应用到所有赛前玩法');
+    }
+
+    // ========== 应用到所有滚球玩法 ==========
+    function applyToAllLive(btn) {
+      const row = btn.closest('.bettype-assign-row');
+      if (!row) return;
+
+      const select = row.querySelector('.bettype-select');
+      if (!select) return;
+
+      const selectedValue = select.value;
+
+      // 获取滚球区域的所有选择框（第二个section）
+      const liveSections = document.querySelectorAll('.bettype-phase-section');
+      if (liveSections.length > 1) {
+        liveSections[1].querySelectorAll('.bettype-select').forEach(s => {
+          s.value = selectedValue;
+        });
+      }
+
+      updateAssignSummary();
+      showToast('success', '批量应用', '已将操盘手设置应用到所有滚球玩法');
+    }
+
+    // ========== 更新分配摘要 ==========
+    function updateAssignSummary() {
+      const summaryList = document.querySelector('.assign-summary-list');
+      if (!summaryList) return;
+
+      // 清空现有摘要
+      summaryList.innerHTML = '';
+
+      // 收集已分配信息
+      const assignedGroups = document.querySelectorAll('.assigned-group');
+      assignedGroups.forEach(group => {
+        const traderName = group.querySelector('.assigned-group-name')?.textContent || '';
+        const count = group.querySelectorAll('.assigned-item').length;
+
+        if (traderName && count > 0) {
+          const item = document.createElement('div');
+          item.className = 'assign-summary-item';
+          item.innerHTML = `
+                        <span class="assign-summary-trader">${traderName}</span>
+                        <span class="assign-summary-bettype">${count}个玩法</span>
+                    `;
+          summaryList.appendChild(item);
+        }
+      });
+
+      // 如果没有分配，显示提示
+      if (summaryList.children.length === 0) {
+        summaryList.innerHTML = '<span style="color:var(--text-muted);font-size:11px;">暂无分配</span>';
+      }
+    }
+
+    // ========== 穿梭框：阶段切换 ==========
+    function switchTransferPhase(el, phase) {
+      document.querySelectorAll('.phase-tab-inline').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      el.classList.add('active');
+
+      // 更新阶段标识（实际项目中会切换不同数据）
+      showToast('success', '阶段切换', `已切换到${phase === 'prematch' ? '赛前' : '滚球'}阶段`);
+    }
+
+    // ========== 穿梭框：选择可分配项 ==========
+    function toggleTransferItem(el) {
+      el.classList.toggle('selected');
+      updateTransferCounts();
+    }
+
+    // ========== 穿梭框：选择已分配项 ==========
+    function toggleAssignedItem(el) {
+      el.classList.toggle('selected');
+    }
+
+    // ========== 穿梭框：快捷选择玩法组 ==========
+    function selectBetTypeGroup(group) {
+      const items = document.querySelectorAll('#availableBetTypes .transfer-item');
+
+      // 先清除所有选择
+      if (group === 'none') {
+        items.forEach(item => item.classList.remove('selected'));
+        updateTransferCounts();
+        return;
+      }
+
+      // 全选
+      if (group === 'all') {
+        items.forEach(item => item.classList.add('selected'));
+        updateTransferCounts();
+        return;
+      }
+
+      // 按组选择
+      const groupIds = {
+        'core': ['1', '3', '5', '7'],           // 让球、大小、独赢、单双
+        'half': ['15', '17'],                   // 半场让球、半场大小
+        'corner': ['20', '21'],                 // 角球让球、角球大小
+        'special': ['120', '126']              // 罚牌数、双重机会
+      };
+
+      const targetIds = groupIds[group] || [];
+      items.forEach(item => {
+        const id = item.getAttribute('data-id');
+        if (targetIds.includes(id)) {
+          item.classList.add('selected');
+        }
+      });
+
+      updateTransferCounts();
+      showToast('success', '快捷选择', `已选择${group === 'core' ? '核心' : group === 'half' ? '半场' : group === 'corner' ? '角球' : '特殊'}玩法`);
+    }
+
+    // ========== 穿梭框：分配选中的玩法 ==========
+    function assignSelectedBetTypes() {
+      const traderSelect = document.getElementById('transferTraderSelect');
+      const trader = traderSelect.value;
+
+      if (!trader) {
+        showToast('warning', '请选择操盘手', '请先从下拉框中选择一个操盘手');
+        return;
+      }
+
+      const selectedItems = document.querySelectorAll('#availableBetTypes .transfer-item.selected');
+      if (selectedItems.length === 0) {
+        showToast('warning', '请选择玩法', '请先从左侧列表中选择要分配的玩法');
+        return;
+      }
+
+      // 移动到已分配区（实际项目中会更新数据结构）
+      const traderNames = {
+        'zhangsan': '张三',
+        'lisi': '李四',
+        'wangwu': '王五',
+        'zhaoliu': '赵六'
+      };
+
+      showToast('success', '分配成功', `已将 ${selectedItems.length} 个玩法分配给 ${traderNames[trader]}`);
+
+      // 清除选择状态
+      selectedItems.forEach(item => item.classList.remove('selected'));
+      updateTransferCounts();
+      updateAssignSummary();
+    }
+
+    // ========== 穿梭框：移除选中的已分配项 ==========
+    function removeSelectedAssigned() {
+      const selectedItems = document.querySelectorAll('#assignedBetTypes .assigned-item.selected');
+      if (selectedItems.length === 0) {
+        showToast('warning', '请选择玩法', '请先从右侧列表中选择要移除的玩法');
+        return;
+      }
+
+      showToast('success', '移除成功', `已移除 ${selectedItems.length} 个玩法的分配`);
+
+      // 清除选择状态
+      selectedItems.forEach(item => item.classList.remove('selected'));
+      updateAssignSummary();
+    }
+
+    // ========== 穿梭框：更新计数 ==========
+    function updateTransferCounts() {
+      const availableCount = document.querySelectorAll('#availableBetTypes .transfer-item').length;
+      const selectedCount = document.querySelectorAll('#availableBetTypes .transfer-item.selected').length;
+
+      const countEl = document.getElementById('availableCount');
+      if (countEl) {
+        countEl.textContent = selectedCount > 0 ? `${selectedCount}/${availableCount} 已选` : `${availableCount} 个`;
+      }
+    }
+
+    // ========== 弹窗功能 ==========
+    function showModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+
+    function hideModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    function hideModalOnOverlay(event, id) {
+      if (event.target.classList.contains('modal-overlay')) {
+        hideModal(id);
+      }
+    }
+
+    // ESC关闭弹窗
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+          modal.classList.remove('active');
+        });
+      }
+    });
+
+    // ========== Toast通知 ==========
+    function showToast(type, title, message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+
+      const icons = {
+        success: '✅',
+        warning: '⚠️',
+        error: '❌'
+      };
+
+      toast.innerHTML = `
+                <span class="toast-icon">${icons[type]}</span>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-msg">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+            `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 4000);
+    }
+
+    // ========== 刷新列表 ==========
+    function refreshList() {
+      showToast('success', '刷新成功', '赛事列表已更新至最新状态');
+    }
+
+    // ========== 统计卡片快捷筛选 ==========
+    function filterByPending() {
+      showToast('success', '筛选已应用', '已切换至待上架赛事视图');
+    }
+
+    function filterByLive() {
+      showToast('success', '筛选已应用', '已切换至滚球赛事视图');
+    }
+
+    function filterByDelay() {
+      showToast('success', '筛选已应用', '已切换至延期赛事视图');
+    }
+
+    // ========== 分页功能 ==========
+    function goToPage(action) {
+      showToast('success', '页面切换', '正在加载...');
+    }
+
+    function changePageSize(size) {
+      showToast('success', '每页条数', `已切换为每页 ${size} 条`);
+    }
+
+    function jumpToPage() {
+      const page = document.querySelector('.page-input').value;
+      showToast('success', '页面跳转', `已跳转至第 ${page} 页`);
+    }
+
+    // ========== 空状态和加载 ==========
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    function resetFilters() {
+      document.getElementById('emptyState').style.display = 'none';
+      showToast('success', '筛选已重置', '正在加载全部数据...');
+    }
+
+    // ========== 赛事预览浮层 ==========
+    function showEventPreview(el, eventId) {
+      const preview = document.getElementById('eventPreview');
+      const rect = el.getBoundingClientRect();
+      preview.style.display = 'block';
+      preview.style.top = (rect.top + window.scrollY) + 'px';
+      preview.style.left = (rect.right + 10) + 'px';
+    }
+
+    function showEventPreviewDemo(el) {
+      const preview = document.getElementById('eventPreview');
+      const rect = el.getBoundingClientRect();
+      preview.style.display = 'block';
+      preview.style.top = Math.max(100, rect.top - 100) + 'px';
+      preview.style.left = Math.min(rect.left - 500, window.innerWidth - 520) + 'px';
+    }
+
+    function hideEventPreview() {
+      document.getElementById('eventPreview').style.display = 'none';
+    }
+
+    // ========== 实时事件提醒 ==========
+    function showEventAlert(type, match, detail) {
+      const alert = document.getElementById('eventAlert');
+      const icon = alert.querySelector('.event-alert-icon');
+      const title = alert.querySelector('.event-alert-title');
+
+      if (type === 'goal') {
+        icon.textContent = '⚽';
+        title.textContent = '进球提醒';
+      } else if (type === 'redcard') {
+        icon.textContent = '🟥';
+        title.textContent = '红牌提醒';
+      }
+
+      alert.querySelector('.event-alert-match').textContent = match;
+      alert.querySelector('.event-alert-detail').textContent = detail;
+      alert.style.display = 'block';
+
+      // 5秒后自动关闭
+      setTimeout(hideEventAlert, 5000);
+    }
+
+    function hideEventAlert() {
+      document.getElementById('eventAlert').style.display = 'none';
+    }
+
+    // ========== 列配置 ==========
+    function resetColumns() {
+      document.querySelectorAll('.column-item-checkbox').forEach(chk => {
+        chk.checked = true;
+      });
+      showToast('success', '已重置', '列配置已恢复默认');
+    }
+
+    // ========== 快捷键 ==========
+    let shortcutHintVisible = false;
+
+    document.addEventListener('keydown', (e) => {
+      // ESC关闭弹窗已在上面处理
+
+      // ? 显示快捷键提示
+      if (e.key === '?' && !e.ctrlKey && !e.altKey) {
+        shortcutHintVisible = !shortcutHintVisible;
+        document.getElementById('shortcutHint').style.display = shortcutHintVisible ? 'block' : 'none';
+        return;
+      }
+
+      // 如果在输入框中，不处理快捷键
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        return;
+      }
+
+      // R - 刷新
+      if (e.key === 'r' || e.key === 'R') {
+        if (!e.ctrlKey) {
+          e.preventDefault();
+          refreshList();
+        }
+      }
+
+      // Ctrl+A - 全选
+      if (e.key === 'a' && e.ctrlKey) {
+        e.preventDefault();
+        const selectAll = document.getElementById('selectAll');
+        toggleAllCheckbox(selectAll);
+      }
+
+      // Ctrl+U - 批量上架
+      if (e.key === 'u' && e.ctrlKey) {
+        e.preventDefault();
+        if (selectedCount > 0) {
+          showModal('publishModal');
+        } else {
+          showToast('warning', '请先选择赛事', '批量上架需要先选择赛事');
+        }
+      }
+    });
+
+    // ========== 模拟实时事件（演示用） ==========
+    function simulateGoalAlert() {
+      showEventAlert('goal', '曼城 vs 利物浦', '曼城 进球！当前比分 3-1');
+      // 闪烁对应行
+      const rows = document.querySelectorAll('.row-danger');
+      rows.forEach(row => {
+        row.classList.add('row-goal-flash');
+        setTimeout(() => row.classList.remove('row-goal-flash'), 1500);
+      });
+    }
+
+    function simulateRedCardAlert() {
+      showEventAlert('redcard', '阿森纳 vs 切尔西', '切尔西 红牌！');
+      const rows = document.querySelectorAll('.row-alert');
+      rows.forEach(row => {
+        row.classList.add('row-redcard-flash');
+        setTimeout(() => row.classList.remove('row-redcard-flash'), 1500);
+      });
+    }
+
+    // ========== 告警轮播功能 ==========
+    const alertCarousels = new Map(); // 存储每个行的轮播状态
+
+    function initAlertCarousels() {
+      document.querySelectorAll('.alert-tags').forEach((container, index) => {
+        const alerts = container.querySelectorAll('.alert-tag');
+        if (alerts.length === 0) return;
+
+        if (alerts.length === 1) {
+          // 单个告警，不需要轮播
+          container.classList.add('single');
+          alerts[0].classList.add('active');
+        } else {
+          // 多个告警，启用轮播
+          // 添加计数指示器
+          const counter = document.createElement('span');
+          counter.className = 'alert-count';
+          counter.textContent = `1/${alerts.length}`;
+          container.appendChild(counter);
+
+          alerts[0].classList.add('active');
+
+          // 存储轮播状态
+          alertCarousels.set(container, {
+            currentIndex: 0,
+            total: alerts.length,
+            counter: counter
+          });
+        }
+      });
+
+      // 启动轮播定时器（3秒切换一次）
+      setInterval(rotateAlerts, 3000);
+    }
+
+    function rotateAlerts() {
+      alertCarousels.forEach((state, container) => {
+        const alerts = container.querySelectorAll('.alert-tag');
+        const currentAlert = alerts[state.currentIndex];
+
+        // 当前告警退出
+        currentAlert.classList.remove('active');
+        currentAlert.classList.add('exit');
+
+        // 计算下一个索引
+        state.currentIndex = (state.currentIndex + 1) % state.total;
+        const nextAlert = alerts[state.currentIndex];
+
+        // 下一个告警进入
+        setTimeout(() => {
+          currentAlert.classList.remove('exit');
+          nextAlert.classList.add('active');
+          state.counter.textContent = `${state.currentIndex + 1}/${state.total}`;
+        }, 200);
+      });
+    }
+
+    // 添加新告警到轮播（供操作触发调用）
+    function addAlertToRow(rowElement, alertType, alertText) {
+      const container = rowElement.querySelector('.alert-tags');
+      if (!container) return;
+
+      // 创建新告警标签
+      const newAlert = document.createElement('span');
+      newAlert.className = `alert-tag ${alertType} new`;
+      newAlert.textContent = alertText;
+      container.appendChild(newAlert);
+
+      // 更新轮播状态
+      const state = alertCarousels.get(container);
+      if (state) {
+        state.total++;
+        state.counter.textContent = `${state.currentIndex + 1}/${state.total}`;
+      } else {
+        // 之前是单个告警，现在需要启用轮播
+        container.classList.remove('single');
+        const alerts = container.querySelectorAll('.alert-tag');
+        const counter = document.createElement('span');
+        counter.className = 'alert-count';
+        counter.textContent = `1/${alerts.length}`;
+        container.appendChild(counter);
+
+        alertCarousels.set(container, {
+          currentIndex: 0,
+          total: alerts.length,
+          counter: counter
+        });
+      }
+
+      // 闪烁提示新告警
+      showToast('warning', '新告警', alertText);
+    }
+
+    // 页面加载后初始化轮播
+    document.addEventListener('DOMContentLoaded', initAlertCarousels);
+
+    // ========== 初始化显示一个Toast ==========
+    setTimeout(() => {
+      showToast('warning', '新赛事待上架', '意甲 国际米兰 vs AC米兰 即将开赛（10分钟）');
+    }, 1500);
+
+    // ========== 全局水印 ==========
+    (function () {
+      const WATERMARK_CONFIG = {
+        text: '仅供内部使用 telegram：nnns1992',
+        tileWidth: 520,
+        tileHeight: 360,
+        rotateDeg: -24,
+        fontSize: 16,
+        lineGap: 10,
+        refreshEachMinute: true
+      };
+
+      function pad2(n) {
+        return String(n).padStart(2, '0');
+      }
+
+      function formatLocal(d) {
+        return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+      }
+
+      function buildTile(line1, line2) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = WATERMARK_CONFIG.tileWidth;
+        const h = WATERMARK_CONFIG.tileHeight;
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        const ctx = canvas.getContext('2d', { alpha: true });
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, w, h);
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = 'rgb(130, 130, 130)';
+        ctx.font = `${WATERMARK_CONFIG.fontSize}px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif`;
+        ctx.textBaseline = 'middle';
+        ctx.save();
+        ctx.translate(w / 2, h / 2);
+        ctx.rotate((WATERMARK_CONFIG.rotateDeg * Math.PI) / 180);
+        ctx.translate(-w / 2, -h / 2);
+        const x = 28;
+        const y = h / 2 - 10;
+        ctx.fillText(line1, x, y);
+        ctx.fillText(line2, x, y + WATERMARK_CONFIG.fontSize + WATERMARK_CONFIG.lineGap);
+        ctx.restore();
+        return canvas.toDataURL('image/png');
+      }
+
+      function refreshWatermark() {
+        const el = document.querySelector('.watermark');
+        if (!el) return;
+        const now = new Date();
+        const url = buildTile(WATERMARK_CONFIG.text, formatLocal(now));
+        el.style.backgroundImage = `url(${url})`;
+        el.style.backgroundSize = `${WATERMARK_CONFIG.tileWidth}px ${WATERMARK_CONFIG.tileHeight}px`;
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', refreshWatermark);
+      } else {
+        refreshWatermark();
+      }
+
+      if (WATERMARK_CONFIG.refreshEachMinute) {
+        setInterval(refreshWatermark, 60 * 1000);
+      }
+    })();
+  </script>
+  <div class="watermark"></div>
+<script>
+    function goBackWithRefresh() {
+      if (document.referrer) {
+        window.location.href = document.referrer;
+      } else {
+        history.back();
+      }
+    }
+  </script>
+</body>
+
+</html>

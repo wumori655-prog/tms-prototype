@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-
-<head>
-  <meta charset="UTF-8">
+<!-- saved from url=(0053)https://trading-docs.pages.dev/prototype/trading-list -->
+<html lang="zh-CN" nighteye="disabled"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>操盘列表 V10 - Trading Floor</title>
   <style>
@@ -734,7 +733,8 @@
     /* 统计卡片 */
     .stats {
       display: flex;
-      gap: 16px;
+      gap: 10px;
+      align-items: stretch;
     }
 
     .stat {
@@ -744,7 +744,10 @@
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
-      min-width: 70px;
+      min-width: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .stat:hover {
@@ -752,9 +755,23 @@
       transform: translateY(-1px);
     }
 
+    .stat-divider {
+      width: 1px;
+      background: var(--border);
+      align-self: stretch;
+      margin: 0 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
     .stat-value {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.1;
     }
 
     .stat-value.warn {
@@ -766,17 +783,11 @@
     }
 
     .stat-value.info {
-      color: var(--accent-blue);
+      color: var(--text-primary);
     }
 
     .stat-value.delay {
       color: var(--accent-orange);
-    }
-
-    .stat-label {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 2px;
     }
 
     /* 顶部右侧 */
@@ -3701,30 +3712,30 @@
 <body>
   <!-- 顶部导航栏 -->
   <nav class="top-nav">
-    <a class="top-nav-logo" href="trading-list.html" style="text-decoration:none;">
+    <a class="top-nav-logo" href="https://trading-docs.pages.dev/prototype/trading-list.html" style="text-decoration:none;">
       <span class="top-nav-logo-icon">T</span>
       <span class="top-nav-logo-text">TMS</span>
     </a>
     <div class="top-nav-menu">
-      <a class="top-nav-item" href="league-management.html" style="text-decoration:none;">
+      <a class="top-nav-item" href="https://trading-docs.pages.dev/prototype/league-management.html" style="text-decoration:none;">
         <span>联赛管理</span>
       </a>
-      <a class="top-nav-item active" href="trading-list.html" style="text-decoration:none;">
+      <a class="top-nav-item active" href="https://trading-docs.pages.dev/prototype/trading-list.html" style="text-decoration:none;">
         <span>操盘列表</span>
       </a>
-      <a class="top-nav-item" href="Trading-Detail.html" style="text-decoration:none;">
+      <a class="top-nav-item" href="https://trading-docs.pages.dev/prototype/Trading-Detail.html" style="text-decoration:none;">
         <span>操盘详情</span>
       </a>
-      <a class="top-nav-item" href="risk-management.html" style="text-decoration:none;">
+      <a class="top-nav-item" href="https://trading-docs.pages.dev/prototype/risk-management.html" style="text-decoration:none;">
         <span>风控管理</span>
       </a>
-      <a class="top-nav-item" href="settlement-list.html" style="text-decoration:none;">
+      <a class="top-nav-item" href="https://trading-docs.pages.dev/prototype/settlement-list.html" style="text-decoration:none;">
         <span>结算管理</span>
       </a>
-      <a class="top-nav-item" href="settlement-detail.html" style="text-decoration:none;">
+      <a class="top-nav-item" href="https://trading-docs.pages.dev/prototype/settlement-detail.html" style="text-decoration:none;">
         <span>结算详情</span>
       </a>
-      <a class="top-nav-item" href="settlement-report.html" style="text-decoration:none;">
+      <a class="top-nav-item" href="https://trading-docs.pages.dev/prototype/settlement-report.html" style="text-decoration:none;">
         <span>结算报表</span>
       </a>
     </div>
@@ -3733,8 +3744,8 @@
       <div class="odds-format-switcher">
         <span class="odds-format-label">赔率</span>
         <div class="odds-format-toggle">
-          <button class="odds-format-btn active" data-format="hk" onclick="switchOddsFormat('hk')">港赔</button>
-          <button class="odds-format-btn" data-format="decimal" onclick="switchOddsFormat('decimal')">欧赔</button>
+          <button class="odds-format-btn active" data-format="hk" onclick="switchOddsFormat(&#39;hk&#39;)">港赔</button>
+          <button class="odds-format-btn" data-format="decimal" onclick="switchOddsFormat(&#39;decimal&#39;)">欧赔</button>
         </div>
       </div>
       <!-- 数据源状态 -->
@@ -3763,7 +3774,7 @@
 
       <!-- 搜索框 -->
       <div class="sidebar-search">
-        <input type="text" placeholder="🔍 搜索赛事/联赛..." style="width:100%;padding:8px 12px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;outline:none;" onfocus="this.style.borderColor='var(--accent-blue)'" onblur="this.style.borderColor='var(--border)'">
+        <input type="text" placeholder="🔍 搜索赛事/联赛..." style="width:100%;padding:8px 12px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;outline:none;" onfocus="this.style.borderColor=&#39;var(--accent-blue)&#39;" onblur="this.style.borderColor=&#39;var(--border)&#39;">
       </div>
 
       <!-- 运动类型树（支持IM数据源所有运动类型） -->
@@ -3966,30 +3977,35 @@
       <header class="topbar">
         <div class="topbar-left">
           <div class="stats">
-            <div class="stat" onclick="filterByPending()" title="点击筛选待上架赛事（全局数量，不受筛选影响）">
-              <div class="stat-value warn">12</div>
-              <div class="stat-label">待上架</div>
-            </div>
-            <div class="stat" onclick="filterByLive()" title="点击筛选滚球赛事（全局数量，不受筛选影响）">
-              <div class="stat-value live">8</div>
-              <div class="stat-label">滚球中</div>
-            </div>
-            <div class="stat" title="当前筛选条件下的赛事数量">
-              <div class="stat-value info">156</div>
+            <div class="stat" title="当前可见范围内的赛事总数">
               <div class="stat-label">总赛事</div>
+              <div class="stat-value info">156</div>
             </div>
-            <div class="stat" onclick="filterByDelay()" title="点击筛选延期赛事（全局数量）">
+            <div class="stat-divider"></div>
+            <div class="stat" onclick="filterByLive()" title="点击筛选滚球赛事">
+              <div class="stat-label">🔴 滚球</div>
+              <div class="stat-value live">8</div>
+            </div>
+            <div class="stat" onclick="filterByUpcoming()" title="点击筛选即将开赛(≤30分钟)赛事">
+              <div class="stat-label">⏰ 即将</div>
+              <div class="stat-value warn">5</div>
+            </div>
+            <div class="stat" onclick="filterByPrematch()" title="点击筛选赛前赛事(>30分钟未开赛)">
+              <div class="stat-label">📅 赛前</div>
+              <div class="stat-value info">141</div>
+            </div>
+            <div class="stat" onclick="filterByDelay()" title="点击筛选延期赛事">
+              <div class="stat-label">⏸ 延期</div>
               <div class="stat-value delay">2</div>
-              <div class="stat-label">延期赛事</div>
             </div>
           </div>
         </div>
         <div class="topbar-right">
-          <div class="server-time"><span class="timezone" style="margin-right:8px;opacity:0.7;">北京时间 UTC+8</span><span id="serverTime">2026-01-19 19:32:45</span></div>
+          <div class="server-time"><span class="timezone" style="margin-right:8px;opacity:0.7;">北京时间 UTC+8</span><span id="serverTime">2026-05-15 11:58:57</span></div>
           <button class="btn btn-secondary" onclick="refreshList()">⟳ 刷新</button>
           <button class="btn btn-secondary" onclick="simulateGoalAlert()" title="演示进球提醒">⚽ 进球</button>
           <button class="btn btn-secondary" onclick="simulateRedCardAlert()" title="演示红牌提醒">🟥 红牌</button>
-          <button class="btn btn-danger" title="仅主管/风控可用，锁定所有滚球赛事" onclick="showModal('lockAllModal')">🔒 一键锁盘</button>
+          <button class="btn btn-danger" title="仅主管/风控可用，锁定所有滚球赛事" onclick="showModal(&#39;lockAllModal&#39;)">🔒 一键锁盘</button>
         </div>
       </header>
 
@@ -3998,10 +4014,10 @@
         <!-- 第1行 - 日期筛选 + 快捷场景 -->
         <div class="filter-row-1">
           <span class="date-label">比赛日:</span>
-          <button class="date-btn" onclick="selectDate('yesterday')">昨日</button>
-          <button class="date-btn active" onclick="selectDate('today')">今日</button>
-          <button class="date-btn" onclick="selectDate('tomorrow')">明日</button>
-          <button class="date-btn" onclick="selectDate('dayafter')">后天</button>
+          <button class="date-btn" onclick="selectDate(&#39;yesterday&#39;)">昨日</button>
+          <button class="date-btn active" onclick="selectDate(&#39;today&#39;)">今日</button>
+          <button class="date-btn" onclick="selectDate(&#39;tomorrow&#39;)">明日</button>
+          <button class="date-btn" onclick="selectDate(&#39;dayafter&#39;)">后天</button>
           <div class="filter-divider"></div>
           <div class="date-range">
             <span class="date-range-label">自定义:</span>
@@ -4012,20 +4028,18 @@
             <span class="date-hint" id="dateHint">已应用自定义日期时间</span>
           </div>
           <div class="quick-scene">
-            <button class="quick-btn" onclick="this.classList.toggle('active')">🎯 待上架全部</button>
-            <button class="quick-btn" onclick="this.classList.toggle('active')">⚠️ 需处理</button>
-            <button class="quick-btn" onclick="this.classList.toggle('active')">👤 我负责的</button>
+            <button class="quick-btn" onclick="this.classList.toggle(&#39;active&#39;)">🎯 待上架全部</button>
+            <button class="quick-btn" onclick="this.classList.toggle(&#39;active&#39;)">⚠️ 需处理</button>
+            <button class="quick-btn" onclick="this.classList.toggle(&#39;active&#39;)">👤 我负责的</button>
           </div>
         </div>
 
         <!-- 第2行 - 比赛进程Tab -->
         <div class="filter-row-2">
-          <div class="phase-tab active" onclick="selectPhase(this, 'all')">📋 全部<span class="cnt">156</span></div>
-          <div class="phase-tab live" onclick="selectPhase(this, 'live')">🔴 滚球<span class="cnt">8</span><span
-              class="realtime-tag">实时</span></div>
-          <div class="phase-tab" onclick="selectPhase(this, 'imminent')">⏰ 即将<span class="cnt">5</span><span
-              class="realtime-tag">实时</span></div>
-          <div class="phase-tab" onclick="selectPhase(this, 'prematch')">📅 赛前<span class="cnt">143</span></div>
+          <div class="phase-tab active" onclick="selectPhase(this, &#39;all&#39;)">📋 全部<span class="cnt">156</span></div>
+          <div class="phase-tab live" onclick="selectPhase(this, &#39;live&#39;)">🔴 滚球<span class="cnt">8</span><span class="realtime-tag">实时</span></div>
+          <div class="phase-tab" onclick="selectPhase(this, &#39;imminent&#39;)">⏰ 即将<span class="cnt">5</span><span class="realtime-tag">实时</span></div>
+          <div class="phase-tab" onclick="selectPhase(this, &#39;prematch&#39;)">📅 赛前<span class="cnt">143</span></div>
           <span class="phase-hint"><span class="hint-icon">💡</span>标记「实时」的进程不受日期筛选影响</span>
         </div>
 
@@ -4045,9 +4059,9 @@
             <button class="status-btn" onclick="toggleStatus(this)">已上架</button>
             <button class="status-btn" onclick="toggleStatus(this)">已下架</button>
           </div>
-          <div class="notification-toggle active" title="开启/关盘新告警通知" onclick="this.classList.toggle('active')">🔔 告警通知
+          <div class="notification-toggle active" title="开启/关盘新告警通知" onclick="this.classList.toggle(&#39;active&#39;)">🔔 告警通知
           </div>
-          <div class="notification-toggle" title="开启/关盘声音提醒" onclick="this.classList.toggle('active')">🔊 声音</div>
+          <div class="notification-toggle" title="开启/关盘声音提醒" onclick="this.classList.toggle(&#39;active&#39;)">🔊 声音</div>
         </div>
 
         <!-- 第4行 - 其他筛选 -->
@@ -4109,7 +4123,7 @@
             <option>按盈亏</option>
           </select>
           <button class="export-btn">📥 导出</button>
-          <button class="column-config-btn" onclick="showModal('columnConfigModal')">⚙️ 列配置</button>
+          <button class="column-config-btn" onclick="showModal(&#39;columnConfigModal&#39;)">⚙️ 列配置</button>
         </div>
       </div>
 
@@ -4162,8 +4176,7 @@
               </td>
               <td class="event-cell">
                 <div class="event-match">
-                  <div class="team-info"><span class="team-name home">加拉塔萨雷</span><span class="red-card"><span
-                        class="red-card-icon"></span></span></div>
+                  <div class="team-info"><span class="team-name home">加拉塔萨雷</span><span class="red-card"><span class="red-card-icon"></span></span></div>
                   <div class="score-box">1-0</div>
                   <div class="team-info"><span class="team-name">费内巴切</span></div>
                 </div>
@@ -4191,8 +4204,8 @@
               <td class="disabled-column">
                 <div class="alert-tags">
                   <span class="alert-tag critical">🚨最紧急</span>
-                  <span class="alert-tag danger">单边超限</span>
-                </div>
+                  <span class="alert-tag danger active">单边超限</span>
+                <span class="alert-count">2/2</span></div>
               </td>
               <td><span class="status-tag pending">待上架</span></td>
               <td><span class="status-tag normal">开盘</span></td>
@@ -4202,21 +4215,19 @@
                 <div class="trader-phase-wrapper">
                   <div class="trader-phase-row">
                     <span class="trader-phase-label prematch">赛前</span>
-                    <div class="trader-info" onclick="showModal('assignModal')">
+                    <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                       <span class="trader-avatar">张</span>
                       <span class="trader-name">张三</span>
                     </div>
                   </div>
                   <div class="trader-phase-row">
                     <span class="trader-phase-label live">滚球</span>
-                    <span class="trader-unassigned" onclick="showModal('assignModal')">未分配</span>
+                    <span class="trader-unassigned" onclick="showModal(&#39;assignModal&#39;)">未分配</span>
                   </div>
                 </div>
               </td>
               <td class="action-cell">
-                <div class="actions"><button class="act-btn success"
-                    onclick="showModal('publishModal')">上架</button><button class="act-btn secondary"
-                    onclick="showModal('logModal')">详情</button></div>
+                <div class="actions"><button class="act-btn success" onclick="showModal(&#39;publishModal&#39;)">上架</button><button class="act-btn secondary" onclick="showModal(&#39;logModal&#39;)">详情</button></div>
               </td>
             </tr>
 
@@ -4265,20 +4276,18 @@
               <td class="disabled-column">
                 <div class="alert-tags">
                   <span class="alert-tag danger">⚠️紧急</span>
-                  <span class="alert-tag warning">未分配</span>
-                </div>
+                  <span class="alert-tag warning active">未分配</span>
+                <span class="alert-count">2/2</span></div>
               </td>
               <td><span class="status-tag pending">待上架</span></td>
               <td><span class="status-tag paused">关盘</span></td>
               <td><span class="flight-status on">●</span></td>
               
               <td class="trader-cell">
-                <span class="trader-unassigned" onclick="showModal('assignModal')">未分配</span>
+                <span class="trader-unassigned" onclick="showModal(&#39;assignModal&#39;)">未分配</span>
               </td>
               <td class="action-cell">
-                <div class="actions"><button class="act-btn success"
-                    onclick="showModal('publishModal')">上架</button><button class="act-btn secondary"
-                    onclick="showModal('logModal')">详情</button></div>
+                <div class="actions"><button class="act-btn success" onclick="showModal(&#39;publishModal&#39;)">上架</button><button class="act-btn secondary" onclick="showModal(&#39;logModal&#39;)">详情</button></div>
               </td>
             </tr>
 
@@ -4303,8 +4312,7 @@
                 <div class="event-match">
                   <div class="team-info"><span class="team-name home">曼城</span></div>
                   <div class="score-box">2-1</div>
-                  <div class="team-info"><span class="team-name">利物浦</span><span class="red-card"><span
-                        class="red-card-icon"></span></span></div>
+                  <div class="team-info"><span class="team-name">利物浦</span><span class="red-card"><span class="red-card-icon"></span></span></div>
                 </div>
                 <div class="event-meta">
                   <span class="event-tag hot">🔥热门</span>
@@ -4330,8 +4338,8 @@
               <td class="disabled-column">
                 <div class="alert-tags">
                   <span class="alert-tag danger">单边超限</span>
-                  <span class="alert-tag danger">大额投注</span>
-                </div>
+                  <span class="alert-tag danger active">大额投注</span>
+                <span class="alert-count">2/2</span></div>
               </td>
               <td><span class="status-tag online">已上架</span></td>
               <td><span class="status-tag normal">开盘</span></td>
@@ -4341,14 +4349,14 @@
                 <div class="trader-phase-wrapper">
                   <div class="trader-phase-row">
                     <span class="trader-phase-label prematch">赛前</span>
-                    <div class="trader-info" onclick="showModal('assignModal')">
+                    <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                       <span class="trader-avatar">张</span>
                       <span class="trader-name">张三</span>
                     </div>
                   </div>
                   <div class="trader-phase-row">
                     <span class="trader-phase-label live">滚球</span>
-                    <div class="trader-info" onclick="showModal('assignModal')">
+                    <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                       <span class="trader-avatar" style="background:var(--accent-blue);">李</span>
                       <span class="trader-name">李四</span>
                     </div>
@@ -4356,15 +4364,12 @@
                 </div>
               </td>
               <td class="action-cell">
-                <div class="actions"><button class="act-btn warning"
-                    onclick="showModal('offlineModal')">下架</button><button class="act-btn primary">操盘</button><button
-                    class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+                <div class="actions"><button class="act-btn warning" onclick="showModal(&#39;offlineModal&#39;)">下架</button><button class="act-btn primary">操盘</button><button class="act-btn secondary" onclick="showModal(&#39;logModal&#39;)">详情</button></div>
               </td>
             </tr>
 
             <!-- 普通区域分隔 -->
-            <tr class="table-section-divider"
-              style="background:rgba(88,166,255,0.1);border-left-color:var(--accent-blue);">
+            <tr class="table-section-divider" style="background:rgba(88,166,255,0.1);border-left-color:var(--accent-blue);">
               <td colspan="14" style="color:var(--accent-blue);">📋 普通区域</td>
             </tr>
 
@@ -4401,8 +4406,7 @@
                 <div class="event-match">
                   <div class="team-info"><span class="team-name home">阿森纳</span></div>
                   <div class="score-box">1-1</div>
-                  <div class="team-info"><span class="team-name">切尔西</span><span class="red-card"><span
-                        class="red-card-icon"></span><span class="red-card-count">2</span></span></div>
+                  <div class="team-info"><span class="team-name">切尔西</span><span class="red-card"><span class="red-card-icon"></span><span class="red-card-count">2</span></span></div>
                 </div>
                 <div class="event-meta">
                   <span class="event-tag neutral">中立场</span>
@@ -4429,8 +4433,8 @@
                 <div class="alert-tags">
                   <span class="alert-tag info">🟥红牌提醒</span>
                   <span class="alert-tag warning">比赛暂停</span>
-                  <span class="alert-tag info">中立场提醒</span>
-                </div>
+                  <span class="alert-tag info active">中立场提醒</span>
+                <span class="alert-count">3/3</span></div>
               </td>
               <td><span class="status-tag online">已上架</span></td>
               <td><span class="status-tag hidden">隐藏</span></td>
@@ -4440,14 +4444,14 @@
                 <div class="trader-phase-wrapper">
                   <div class="trader-phase-row">
                     <span class="trader-phase-label prematch">赛前</span>
-                    <div class="trader-info" onclick="showModal('assignModal')">
+                    <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                       <span class="trader-avatar" style="background:var(--accent-green);">王</span>
                       <span class="trader-name">王五</span>
                     </div>
                   </div>
                   <div class="trader-phase-row">
                     <span class="trader-phase-label live">滚球</span>
-                    <div class="trader-info" onclick="showModal('assignModal')">
+                    <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                       <span class="trader-avatar" style="background:var(--accent-green);">王</span>
                       <span class="trader-name">王五</span>
                     </div>
@@ -4455,9 +4459,7 @@
                 </div>
               </td>
               <td class="action-cell">
-                <div class="actions"><button class="act-btn warning"
-                    onclick="showModal('offlineModal')">下架</button><button class="act-btn primary">操盘</button><button
-                    class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+                <div class="actions"><button class="act-btn warning" onclick="showModal(&#39;offlineModal&#39;)">下架</button><button class="act-btn primary">操盘</button><button class="act-btn secondary" onclick="showModal(&#39;logModal&#39;)">详情</button></div>
               </td>
             </tr>
 
@@ -4503,8 +4505,8 @@
               </td>
               <td class="disabled-column"><span class="pnl-value positive">+¥5,200</span></td>
               <td class="disabled-column">
-                <div class="alert-tags">
-                  <span class="alert-tag info">⚽进球提醒</span>
+                <div class="alert-tags single">
+                  <span class="alert-tag info active">⚽进球提醒</span>
                 </div>
               </td>
               <td><span class="status-tag online">已上架</span></td>
@@ -4515,14 +4517,14 @@
                 <div class="trader-phase-wrapper">
                   <div class="trader-phase-row">
                     <span class="trader-phase-label prematch">赛前</span>
-                    <div class="trader-info" onclick="showModal('assignModal')">
+                    <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                       <span class="trader-avatar">张</span>
                       <span class="trader-name">张三</span>
                     </div>
                   </div>
                   <div class="trader-phase-row">
                     <span class="trader-phase-label live">滚球</span>
-                    <div class="trader-info" onclick="showModal('assignModal')">
+                    <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                       <span class="trader-avatar" style="background:var(--accent-blue);">李</span>
                       <span class="trader-name">李四</span>
                     </div>
@@ -4530,9 +4532,7 @@
                 </div>
               </td>
               <td class="action-cell">
-                <div class="actions"><button class="act-btn warning"
-                    onclick="showModal('offlineModal')">下架</button><button class="act-btn primary">操盘</button><button
-                    class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+                <div class="actions"><button class="act-btn warning" onclick="showModal(&#39;offlineModal&#39;)">下架</button><button class="act-btn primary">操盘</button><button class="act-btn secondary" onclick="showModal(&#39;logModal&#39;)">详情</button></div>
               </td>
             </tr>
 
@@ -4594,8 +4594,8 @@
               <td class="disabled-column">
                 <div class="alert-tags">
                   <span class="alert-tag danger">延期超时</span>
-                  <span class="alert-tag warning">比赛延期</span>
-                </div>
+                  <span class="alert-tag warning active">比赛延期</span>
+                <span class="alert-count">2/2</span></div>
               </td>
               <td><span class="status-tag pending">待上架</span></td>
               <td><span class="status-tag locked">锁定</span></td>
@@ -4603,14 +4603,14 @@
               
               <td class="trader-cell">
                 <div class="trader-single">
-                  <div class="trader-info" onclick="showModal('assignModal')">
+                  <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                     <span class="trader-avatar">张</span>
                     <span class="trader-name">张三</span>
                   </div>
                 </div>
               </td>
               <td class="action-cell">
-                <div class="actions"><button class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+                <div class="actions"><button class="act-btn secondary" onclick="showModal(&#39;logModal&#39;)">详情</button></div>
               </td>
             </tr>
 
@@ -4658,8 +4658,8 @@
               </td>
               <td class="disabled-column"><span class="pnl-value positive">+¥12,300</span></td>
               <td class="disabled-column">
-                <div class="alert-tags">
-                  <span class="alert-tag warning">赔率异常</span>
+                <div class="alert-tags single">
+                  <span class="alert-tag warning active">赔率异常</span>
                 </div>
               </td>
               <td><span class="status-tag online">已上架</span></td>
@@ -4670,14 +4670,14 @@
                 <div class="trader-phase-wrapper">
                   <div class="trader-phase-row">
                     <span class="trader-phase-label prematch">赛前</span>
-                    <div class="trader-info" onclick="showModal('assignModal')">
+                    <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                       <span class="trader-avatar" style="background:var(--accent-orange);">赵</span>
                       <span class="trader-name">赵六</span>
                     </div>
                   </div>
                   <div class="trader-phase-row">
                     <span class="trader-phase-label live">滚球</span>
-                    <div class="trader-info" onclick="showModal('assignModal')">
+                    <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                       <span class="trader-avatar" style="background:var(--accent-orange);">赵</span>
                       <span class="trader-name">赵六</span>
                     </div>
@@ -4685,9 +4685,7 @@
                 </div>
               </td>
               <td class="action-cell">
-                <div class="actions"><button class="act-btn warning"
-                    onclick="showModal('offlineModal')">下架</button><button class="act-btn primary">操盘</button><button
-                    class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+                <div class="actions"><button class="act-btn warning" onclick="showModal(&#39;offlineModal&#39;)">下架</button><button class="act-btn primary">操盘</button><button class="act-btn secondary" onclick="showModal(&#39;logModal&#39;)">详情</button></div>
               </td>
             </tr>
 
@@ -4752,16 +4750,14 @@
               
               <td class="trader-cell">
                 <div class="trader-single">
-                  <div class="trader-info" onclick="showModal('assignModal')">
+                  <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                     <span class="trader-avatar" style="background:var(--accent-green);">王</span>
                     <span class="trader-name">王五</span>
                   </div>
                 </div>
               </td>
               <td class="action-cell">
-                <div class="actions"><button class="act-btn success"
-                    onclick="showModal('publishModal')">上架</button><button class="act-btn secondary"
-                    onclick="showModal('logModal')">详情</button></div>
+                <div class="actions"><button class="act-btn success" onclick="showModal(&#39;publishModal&#39;)">上架</button><button class="act-btn secondary" onclick="showModal(&#39;logModal&#39;)">详情</button></div>
               </td>
             </tr>
 
@@ -4807,8 +4803,8 @@
               </td>
               <td class="disabled-column"><span class="pnl-value positive">+¥1,800</span></td>
               <td class="disabled-column">
-                <div class="alert-tags">
-                  <span class="alert-tag warning">数据延迟</span>
+                <div class="alert-tags single">
+                  <span class="alert-tag warning active">数据延迟</span>
                 </div>
               </td>
               <td><span class="status-tag online">已上架</span></td>
@@ -4819,21 +4815,19 @@
                 <div class="trader-phase-wrapper">
                   <div class="trader-phase-row">
                     <span class="trader-phase-label prematch">赛前</span>
-                    <div class="trader-info" onclick="showModal('assignModal')">
+                    <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                       <span class="trader-avatar" style="background:var(--accent-blue);">李</span>
                       <span class="trader-name">李四</span>
                     </div>
                   </div>
                   <div class="trader-phase-row">
                     <span class="trader-phase-label live">滚球</span>
-                    <span class="trader-unassigned" onclick="showModal('assignModal')">未分配</span>
+                    <span class="trader-unassigned" onclick="showModal(&#39;assignModal&#39;)">未分配</span>
                   </div>
                 </div>
               </td>
               <td class="action-cell">
-                <div class="actions"><button class="act-btn warning"
-                    onclick="showModal('offlineModal')">下架</button><button class="act-btn primary">操盘</button><button
-                    class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+                <div class="actions"><button class="act-btn warning" onclick="showModal(&#39;offlineModal&#39;)">下架</button><button class="act-btn primary">操盘</button><button class="act-btn secondary" onclick="showModal(&#39;logModal&#39;)">详情</button></div>
               </td>
             </tr>
 
@@ -4888,14 +4882,14 @@
                 <div class="trader-phase-wrapper">
                   <div class="trader-phase-row">
                     <span class="trader-phase-label prematch">赛前</span>
-                    <div class="trader-info" onclick="showModal('assignModal')">
+                    <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                       <span class="trader-avatar">张</span>
                       <span class="trader-name">张三</span>
                     </div>
                   </div>
                   <div class="trader-phase-row">
                     <span class="trader-phase-label live">滚球</span>
-                    <div class="trader-info" onclick="showModal('assignModal')">
+                    <div class="trader-info" onclick="showModal(&#39;assignModal&#39;)">
                       <span class="trader-avatar">张</span>
                       <span class="trader-name">张三</span>
                     </div>
@@ -4903,9 +4897,7 @@
                 </div>
               </td>
               <td class="action-cell">
-                <div class="actions"><button class="act-btn warning"
-                    onclick="showModal('offlineModal')">下架</button><button class="act-btn primary">操盘</button><button
-                    class="act-btn secondary" onclick="showModal('logModal')">详情</button></div>
+                <div class="actions"><button class="act-btn warning" onclick="showModal(&#39;offlineModal&#39;)">下架</button><button class="act-btn primary">操盘</button><button class="act-btn secondary" onclick="showModal(&#39;logModal&#39;)">详情</button></div>
               </td>
             </tr>
           </tbody>
@@ -4925,14 +4917,14 @@
             共 <span class="page-total">156</span> 场赛事，每页显示
             <select class="page-size" onchange="changePageSize(this.value)">
               <option value="20">20</option>
-              <option value="50" selected>50</option>
+              <option value="50" selected="">50</option>
               <option value="100">100</option>
             </select>
             条
           </div>
           <div class="page-nav">
-            <button class="page-btn" onclick="goToPage('first')" title="首页">«</button>
-            <button class="page-btn" onclick="goToPage('prev')" title="上一页">‹</button>
+            <button class="page-btn" onclick="goToPage(&#39;first&#39;)" title="首页">«</button>
+            <button class="page-btn" onclick="goToPage(&#39;prev&#39;)" title="上一页">‹</button>
             <span class="page-numbers">
               <button class="page-btn active">1</button>
               <button class="page-btn">2</button>
@@ -4940,8 +4932,8 @@
               <span class="page-ellipsis">...</span>
               <button class="page-btn">4</button>
             </span>
-            <button class="page-btn" onclick="goToPage('next')" title="下一页">›</button>
-            <button class="page-btn" onclick="goToPage('last')" title="末页">»</button>
+            <button class="page-btn" onclick="goToPage(&#39;next&#39;)" title="下一页">›</button>
+            <button class="page-btn" onclick="goToPage(&#39;last&#39;)" title="末页">»</button>
             <span class="page-jump">
               跳至 <input type="number" class="page-input" value="1" min="1" max="4"> 页
               <button class="btn btn-sm btn-secondary" onclick="jumpToPage()">确定</button>
@@ -4964,20 +4956,20 @@
       已选择 <span class="batch-count" id="selectedCount">0</span> 场赛事
     </div>
     <div class="batch-actions">
-      <button class="btn btn-success" onclick="showModal('publishModal')">批量上架</button>
-      <button class="btn btn-secondary" onclick="showModal('offlineModal')">批量下架</button>
-      <button class="btn btn-secondary" onclick="showModal('assignModal')">分配操盘手</button>
+      <button class="btn btn-success" onclick="showModal(&#39;publishModal&#39;)">批量上架</button>
+      <button class="btn btn-secondary" onclick="showModal(&#39;offlineModal&#39;)">批量下架</button>
+      <button class="btn btn-secondary" onclick="showModal(&#39;assignModal&#39;)">分配操盘手</button>
       <button class="btn btn-secondary" onclick="clearSelection()">取消选择</button>
     </div>
     <button class="batch-close" onclick="clearSelection()">×</button>
   </div>
 
   <!-- 上架确认弹窗 -->
-  <div class="modal-overlay" id="publishModal" onclick="hideModalOnOverlay(event, 'publishModal')">
+  <div class="modal-overlay" id="publishModal" onclick="hideModalOnOverlay(event, &#39;publishModal&#39;)">
     <div class="modal">
       <div class="modal-header">
         <h3 class="modal-title">✅ 确认上架赛事</h3>
-        <button class="modal-close" onclick="hideModal('publishModal')">×</button>
+        <button class="modal-close" onclick="hideModal(&#39;publishModal&#39;)">×</button>
       </div>
       <div class="modal-body">
         <div class="modal-info">
@@ -4999,7 +4991,7 @@
           <label class="form-label required">盘口初始状态</label>
           <div class="radio-group">
             <label class="radio-item">
-              <input type="radio" name="marketInitStatus" value="follow" checked>
+              <input type="radio" name="marketInitStatus" value="follow" checked="">
               <span class="radio-label">跟随数据源（推荐）</span>
               <span class="radio-desc">上架后盘口跟随IM状态，可立即投注</span>
             </label>
@@ -5025,19 +5017,18 @@
         <div class="modal-info" style="margin-top:16px;background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.3);border-radius:6px;padding:12px;"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">💡</span><span style="color:var(--accent-blue);font-size:13px;"><strong>提示：</strong>请确保上架前已分配操盘手，可在批量操作栏点击「分配操盘手」进行分配。</span></div></div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="hideModal('publishModal')">取消</button>
-        <button class="btn btn-primary"
-          onclick="hideModal('publishModal'); showToast('success', '上架成功', '3场赛事已成功上架')">确认上架</button>
+        <button class="btn btn-secondary" onclick="hideModal(&#39;publishModal&#39;)">取消</button>
+        <button class="btn btn-primary" onclick="hideModal(&#39;publishModal&#39;); showToast(&#39;success&#39;, &#39;上架成功&#39;, &#39;3场赛事已成功上架&#39;)">确认上架</button>
       </div>
     </div>
   </div>
 
   <!-- 分配操盘手弹窗（支持按玩法分配） -->
-  <div class="modal-overlay" id="assignModal" onclick="hideModalOnOverlay(event, 'assignModal')">
+  <div class="modal-overlay" id="assignModal" onclick="hideModalOnOverlay(event, &#39;assignModal&#39;)">
     <div class="modal large">
       <div class="modal-header">
         <h3 class="modal-title">👤 分配操盘手</h3>
-        <button class="modal-close" onclick="hideModal('assignModal')">×</button>
+        <button class="modal-close" onclick="hideModal(&#39;assignModal&#39;)">×</button>
       </div>
       <div class="modal-body">
         <!-- 赛事信息 -->
@@ -5056,8 +5047,8 @@
         <div class="bettype-assign-section" id="bettypeAssignSection">
           <!-- 阶段切换Tab -->
           <div class="phase-tabs-inline">
-            <div class="phase-tab-inline active" onclick="switchTransferPhase(this, 'prematch')">📅 赛前阶段</div>
-            <div class="phase-tab-inline live" onclick="switchTransferPhase(this, 'live')">🔴 滚球阶段</div>
+            <div class="phase-tab-inline active" onclick="switchTransferPhase(this, &#39;prematch&#39;)">📅 赛前阶段</div>
+            <div class="phase-tab-inline live" onclick="switchTransferPhase(this, &#39;live&#39;)">🔴 滚球阶段</div>
           </div>
 
           <!-- 穿梭框 -->
@@ -5121,12 +5112,12 @@
                 </div>
               </div>
               <div class="transfer-quick-btns">
-                <button class="transfer-quick-btn" onclick="selectBetTypeGroup('core')">核心玩法</button>
-                <button class="transfer-quick-btn" onclick="selectBetTypeGroup('half')">半场玩法</button>
-                <button class="transfer-quick-btn" onclick="selectBetTypeGroup('corner')">角球玩法</button>
-                <button class="transfer-quick-btn" onclick="selectBetTypeGroup('special')">特殊玩法</button>
-                <button class="transfer-quick-btn" onclick="selectBetTypeGroup('all')">全选</button>
-                <button class="transfer-quick-btn" onclick="selectBetTypeGroup('none')">清空</button>
+                <button class="transfer-quick-btn" onclick="selectBetTypeGroup(&#39;core&#39;)">核心玩法</button>
+                <button class="transfer-quick-btn" onclick="selectBetTypeGroup(&#39;half&#39;)">半场玩法</button>
+                <button class="transfer-quick-btn" onclick="selectBetTypeGroup(&#39;corner&#39;)">角球玩法</button>
+                <button class="transfer-quick-btn" onclick="selectBetTypeGroup(&#39;special&#39;)">特殊玩法</button>
+                <button class="transfer-quick-btn" onclick="selectBetTypeGroup(&#39;all&#39;)">全选</button>
+                <button class="transfer-quick-btn" onclick="selectBetTypeGroup(&#39;none&#39;)">清空</button>
               </div>
             </div>
 
@@ -5209,19 +5200,18 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="hideModal('assignModal')">取消</button>
-        <button class="btn btn-primary"
-          onclick="hideModal('assignModal'); showToast('success', '分配成功', '已将3场赛事分配给指定操盘手')">确认分配</button>
+        <button class="btn btn-secondary" onclick="hideModal(&#39;assignModal&#39;)">取消</button>
+        <button class="btn btn-primary" onclick="hideModal(&#39;assignModal&#39;); showToast(&#39;success&#39;, &#39;分配成功&#39;, &#39;已将3场赛事分配给指定操盘手&#39;)">确认分配</button>
       </div>
     </div>
   </div>
 
   <!-- 操盘日志弹窗 -->
-  <div class="modal-overlay" id="logModal" onclick="hideModalOnOverlay(event, 'logModal')">
+  <div class="modal-overlay" id="logModal" onclick="hideModalOnOverlay(event, &#39;logModal&#39;)">
     <div class="modal xlarge">
       <div class="modal-header">
         <h3 class="modal-title">📋 操盘日志</h3>
-        <button class="modal-close" onclick="hideModal('logModal')">×</button>
+        <button class="modal-close" onclick="hideModal(&#39;logModal&#39;)">×</button>
       </div>
       <div class="modal-body">
         <!-- 筛选区 -->
@@ -5230,7 +5220,7 @@
             <label>时间范围</label>
             <select class="form-select">
               <option value="1h">最近1小时</option>
-              <option value="today" selected>今天</option>
+              <option value="today" selected="">今天</option>
               <option value="3d">最近3天</option>
               <option value="custom">自定义</option>
             </select>
@@ -5352,7 +5342,7 @@
         <div class="log-pagination">
           <span style="font-size: 11px; color: var(--text-muted);">共 156 条记录，第 1/16 页</span>
           <div style="display: flex; gap: 8px;">
-            <button class="btn btn-secondary btn-sm" disabled>上一页</button>
+            <button class="btn btn-secondary btn-sm" disabled="">上一页</button>
             <button class="btn btn-primary btn-sm">下一页</button>
           </div>
         </div>
@@ -5361,11 +5351,11 @@
   </div>
   <!-- 一键锁盘确认弹窗 -->
 
-  <div class="modal-overlay" id="lockAllModal" onclick="hideModalOnOverlay(event, 'lockAllModal')">
+  <div class="modal-overlay" id="lockAllModal" onclick="hideModalOnOverlay(event, &#39;lockAllModal&#39;)">
     <div class="modal">
       <div class="modal-header">
         <h3 class="modal-title">🔒 一键锁盘确认</h3>
-        <button class="modal-close" onclick="hideModal('lockAllModal')">×</button>
+        <button class="modal-close" onclick="hideModal(&#39;lockAllModal&#39;)">×</button>
       </div>
       <div class="modal-body">
         <div class="modal-danger">
@@ -5390,19 +5380,18 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="hideModal('lockAllModal')">取消</button>
-        <button class="btn btn-danger"
-          onclick="hideModal('lockAllModal'); showToast('warning', '已锁盘', '所有滚球赛事已锁定')">确认锁盘</button>
+        <button class="btn btn-secondary" onclick="hideModal(&#39;lockAllModal&#39;)">取消</button>
+        <button class="btn btn-danger" onclick="hideModal(&#39;lockAllModal&#39;); showToast(&#39;warning&#39;, &#39;已锁盘&#39;, &#39;所有滚球赛事已锁定&#39;)">确认锁盘</button>
       </div>
     </div>
   </div>
 
   <!-- 下架确认弹窗 -->
-  <div class="modal-overlay" id="offlineModal" onclick="hideModalOnOverlay(event, 'offlineModal')">
+  <div class="modal-overlay" id="offlineModal" onclick="hideModalOnOverlay(event, &#39;offlineModal&#39;)">
     <div class="modal">
       <div class="modal-header">
         <h3 class="modal-title">📤 确认下架赛事</h3>
-        <button class="modal-close" onclick="hideModal('offlineModal')">×</button>
+        <button class="modal-close" onclick="hideModal(&#39;offlineModal&#39;)">×</button>
       </div>
       <div class="modal-body">
         <div class="modal-warning">
@@ -5429,12 +5418,11 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="hideModal('offlineModal')">取消</button>
-        <button class="btn btn-danger"
-          onclick="hideModal('offlineModal'); showToast('success', '下架成功', '2场赛事已下架，盘口已隐藏')">确认下架</button>
+        <button class="btn btn-secondary" onclick="hideModal(&#39;offlineModal&#39;)">取消</button>
+        <button class="btn btn-danger" onclick="hideModal(&#39;offlineModal&#39;); showToast(&#39;success&#39;, &#39;下架成功&#39;, &#39;2场赛事已下架，盘口已隐藏&#39;)">确认下架</button>
       </div>
     </div>
-  </div>
+  
 
   <!-- 赛事预览浮层 -->
   <div class="event-preview" id="eventPreview" style="display:none; top:200px; left:400px;">
@@ -5495,19 +5483,19 @@
       </div>
       <div class="preview-actions">
         <button class="btn btn-primary btn-sm">进入操盘</button>
-        <button class="btn btn-secondary btn-sm" onclick="location.href='settlement-detail.html'">结算详情</button>
-        <button class="btn btn-secondary btn-sm" onclick="showModal('logModal')">完整日志</button>
+        <button class="btn btn-secondary btn-sm" onclick="location.href=&#39;settlement-detail.html&#39;">结算详情</button>
+        <button class="btn btn-secondary btn-sm" onclick="showModal(&#39;logModal&#39;)">完整日志</button>
         <button class="btn btn-secondary btn-sm">隐藏盘口</button>
       </div>
     </div>
   </div>
 
   <!-- 下架确认弹窗 -->
-  <div class="modal-overlay" id="offlineModal" onclick="hideModalOnOverlay(event, 'offlineModal')">
+  <div class="modal-overlay" id="offlineModal" onclick="hideModalOnOverlay(event, &#39;offlineModal&#39;)">
     <div class="modal">
       <div class="modal-header">
         <h3 class="modal-title">⚠️ 确认下架赛事</h3>
-        <button class="modal-close" onclick="hideModal('offlineModal')">×</button>
+        <button class="modal-close" onclick="hideModal(&#39;offlineModal&#39;)">×</button>
       </div>
       <div class="modal-body">
         <div class="modal-info">
@@ -5533,89 +5521,88 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="hideModal('offlineModal')">取消</button>
-        <button class="btn btn-danger"
-          onclick="hideModal('offlineModal'); showToast('success', '下架成功', '赛事已下架，盘口已隐藏')">确认下架</button>
+        <button class="btn btn-secondary" onclick="hideModal(&#39;offlineModal&#39;)">取消</button>
+        <button class="btn btn-danger" onclick="hideModal(&#39;offlineModal&#39;); showToast(&#39;success&#39;, &#39;下架成功&#39;, &#39;赛事已下架，盘口已隐藏&#39;)">确认下架</button>
       </div>
     </div>
   </div>
 
   <!-- 列配置弹窗 -->
-  <div class="modal-overlay" id="columnConfigModal" onclick="hideModalOnOverlay(event, 'columnConfigModal')">
+  <div class="modal-overlay" id="columnConfigModal" onclick="hideModalOnOverlay(event, &#39;columnConfigModal&#39;)">
     <div class="modal">
       <div class="modal-header">
         <h3 class="modal-title">⚙️ 列配置</h3>
-        <button class="modal-close" onclick="hideModal('columnConfigModal')">×</button>
+        <button class="modal-close" onclick="hideModal(&#39;columnConfigModal&#39;)">×</button>
       </div>
       <div class="modal-body">
         <div class="form-hint" style="margin-bottom:16px;">拖拽调整列顺序，取消勾选隐藏列。带🔒的列不可隐藏。</div>
         <div class="column-list">
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked disabled>
+            <input type="checkbox" class="column-item-checkbox" checked="" disabled="">
             <span class="column-item-name">开赛时间</span>
             <span class="column-item-lock">🔒</span>
           </div>
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked disabled>
+            <input type="checkbox" class="column-item-checkbox" checked="" disabled="">
             <span class="column-item-name">联赛</span>
             <span class="column-item-lock">🔒</span>
           </div>
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked disabled>
+            <input type="checkbox" class="column-item-checkbox" checked="" disabled="">
             <span class="column-item-name">赛事</span>
             <span class="column-item-lock">🔒</span>
           </div>
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked>
+            <input type="checkbox" class="column-item-checkbox" checked="">
             <span class="column-item-name">盘口数</span>
           </div>
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked>
+            <input type="checkbox" class="column-item-checkbox" checked="">
             <span class="column-item-name">投注/赔付</span>
           </div>
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked>
+            <input type="checkbox" class="column-item-checkbox" checked="">
             <span class="column-item-name">单边%</span>
           </div>
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked>
+            <input type="checkbox" class="column-item-checkbox" checked="">
             <span class="column-item-name">盈亏</span>
           </div>
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked>
+            <input type="checkbox" class="column-item-checkbox" checked="">
             <span class="column-item-name">告警</span>
           </div>
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked>
+            <input type="checkbox" class="column-item-checkbox" checked="">
             <span class="column-item-name">上架</span>
           </div>
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked>
+            <input type="checkbox" class="column-item-checkbox" checked="">
             <span class="column-item-name">盘口状态</span>
           </div>
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked>
+            <input type="checkbox" class="column-item-checkbox" checked="">
             <span class="column-item-name">数据源</span>
           </div>
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked>
+            <input type="checkbox" class="column-item-checkbox" checked="">
             <span class="column-item-name">操盘手</span>
           </div>
           <div class="column-item">
             <span class="column-item-drag">⋮⋮</span>
-            <input type="checkbox" class="column-item-checkbox" checked disabled>
+            <input type="checkbox" class="column-item-checkbox" checked="" disabled="">
             <span class="column-item-name">操作</span>
             <span class="column-item-lock">🔒</span>
           </div>
@@ -5623,8 +5610,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="resetColumns()">恢复默认</button>
-        <button class="btn btn-primary"
-          onclick="hideModal('columnConfigModal'); showToast('success', '保存成功', '列配置已更新')">保存配置</button>
+        <button class="btn btn-primary" onclick="hideModal(&#39;columnConfigModal&#39;); showToast(&#39;success&#39;, &#39;保存成功&#39;, &#39;列配置已更新&#39;)">保存配置</button>
       </div>
     </div>
   </div>
@@ -6133,6 +6119,14 @@
       showToast('success', '筛选已应用', '已切换至滚球赛事视图');
     }
 
+    function filterByUpcoming() {
+      showToast('success', '筛选已应用', '已切换至即将开赛(≤30分钟)赛事视图');
+    }
+
+    function filterByPrematch() {
+      showToast('success', '筛选已应用', '已切换至赛前(>30分钟未开赛)赛事视图');
+    }
+
     function filterByDelay() {
       showToast('success', '筛选已应用', '已切换至延期赛事视图');
     }
@@ -6451,7 +6445,7 @@
       }
     })();
   </script>
-  <div class="watermark"></div>
+  <div class="watermark" style="background-image: url(&quot;data:image/png;base64,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&quot;); background-size: 520px 360px;"></div>
 <script>
     function goBackWithRefresh() {
       if (document.referrer) {
@@ -6461,6 +6455,6 @@
       }
     }
   </script>
-</body>
+<!-- Cloudflare Pages Analytics --><script defer="" src="./beacon.min.js.下载" data-cf-beacon="{&quot;token&quot;: &quot;63dd7f2269264b8ebf1c514d04bd4638&quot;}"></script><!-- Cloudflare Pages Analytics -->
 
-</html>
+</body></html>

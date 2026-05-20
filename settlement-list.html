@@ -3047,11 +3047,6 @@
               <button class="date-shortcut-inline" onclick="setDateRange('week')">本周</button>
             </div>
           </div>
-          <!-- 显示未完成 -->
-          <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;color:var(--text-secondary);" title="勾选后，即使开赛时间不在筛选范围内，仍有未结算盘口的赛事也会展示">
-            <input type="checkbox" id="showIncomplete" checked onchange="toggleShowIncomplete(this.checked)" style="cursor:pointer;">
-            <span>显示未完成</span>
-          </label>
           <select class="filter-select">
             <option>全部结算人员</option>
             <option>张三</option>
@@ -4416,11 +4411,6 @@
         'parlay_prematch': '串关-全部赛前', 'parlay_live': '串关-全部滚球', 'parlay_mixed': '串关-混合'
       };
       showFilterToast('已筛选投注阶段：' + (labels[stage] || stage) + '（demo 模式，未实际过滤）');
-    }
-
-    function toggleShowIncomplete(checked) {
-      // 显示未完成：勾选=包含时间范围外仍有未结算盘口的赛事
-      showFilterToast(checked ? '已启用「显示未完成」：时间外有未结算盘口的赛事一并展示' : '已关闭「显示未完成」：仅展示时间范围内赛事');
     }
 
     function toggleParlayDetail(parlayId) {

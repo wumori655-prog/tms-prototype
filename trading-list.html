@@ -854,6 +854,144 @@
       background: rgba(248, 81, 73, 0.25);
     }
 
+    .btn-success {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--accent-green);
+      border-color: rgba(63, 185, 80, 0.3);
+    }
+
+    .btn-success:hover {
+      background: rgba(63, 185, 80, 0.25);
+    }
+
+    /* ========== 异常清单 / 已锁清单 弹窗专属样式 ========== */
+    .anomaly-list {
+      max-height: 360px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-primary);
+    }
+
+    .anomaly-list-header {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-secondary);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .anomaly-list-header input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    .anomaly-row {
+      display: flex;
+      align-items: flex-start;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .anomaly-row:hover {
+      background: var(--bg-hover);
+    }
+
+    .anomaly-row:last-child {
+      border-bottom: none;
+    }
+
+    .anomaly-row input[type="checkbox"] {
+      margin-right: 10px;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+
+    .anomaly-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .anomaly-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .anomaly-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .anomaly-tag {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .anomaly-tag-red {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    .anomaly-tag-orange {
+      background: rgba(255, 165, 0, 0.15);
+      color: #ffa500;
+      border: 1px solid rgba(255, 165, 0, 0.3);
+    }
+
+    .anomaly-tag-yellow {
+      background: rgba(255, 215, 0, 0.15);
+      color: #ffd700;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+    }
+
+    .anomaly-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .anomaly-list-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--bg-tertiary);
+      border-top: 1px solid var(--border);
+      border-radius: 0 0 6px 6px;
+    }
+
+    .auto-refresh-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--accent-green);
+    }
+
+    .auto-refresh-indicator::before {
+      content: '●';
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
     .btn-sm {
       padding: 4px 8px;
       font-size: 11px;
@@ -4005,7 +4143,8 @@
           <button class="btn btn-secondary" onclick="refreshList()">⟳ 刷新</button>
           <button class="btn btn-secondary" onclick="simulateGoalAlert()" title="演示进球提醒">⚽ 进球</button>
           <button class="btn btn-secondary" onclick="simulateRedCardAlert()" title="演示红牌提醒">🟥 红牌</button>
-          <button class="btn btn-danger" title="仅主管/风控可用，锁定所有滚球赛事" onclick="showModal(&#39;lockAllModal&#39;)">🔒 一键锁盘</button>
+          <button class="btn btn-danger" title="仅主管/风控可用，从异常清单勾选锁定" onclick="showModal(&#39;lockAllModal&#39;)">🔒 一键锁盘</button>
+          <button class="btn btn-success" title="仅主管/风控可用，从已锁清单勾选解锁" onclick="showModal(&#39;unlockAllModal&#39;)">🔓 一键解锁</button>
         </div>
       </header>
 
@@ -5343,39 +5482,226 @@
       </div>
     </div>
   </div>
-  <!-- 一键锁盘确认弹窗 -->
-
+  <!-- 一键锁盘 - 异常赛事清单弹窗（v2.0 改造） -->
   <div class="modal-overlay" id="lockAllModal" onclick="hideModalOnOverlay(event, &#39;lockAllModal&#39;)">
+    <div class="modal" style="width: 560px; max-width: 90vw;">
+      <div class="modal-header">
+        <h3 class="modal-title">🔒 紧急锁盘 - 异常赛事清单</h3>
+        <button class="modal-close" onclick="hideModal(&#39;lockAllModal&#39;)">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-info" style="margin-bottom: 12px;">
+          <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
+            系统识别 <strong style="color: var(--accent-red);">5 场</strong> 异常赛事，请勾选要锁定的赛事。
+          </div>
+        </div>
+
+        <div class="anomaly-list">
+          <div class="anomaly-list-header">
+            <input type="checkbox" id="lockSelectAll" onchange="toggleSelectAll(&#39;lockSelectAll&#39;, &#39;lock-item&#39;)">
+            <label for="lockSelectAll" style="cursor:pointer;">全选</label>
+          </div>
+
+          <div class="anomaly-row" onclick="toggleCheckbox(this)">
+            <input type="checkbox" class="lock-item" onclick="event.stopPropagation()">
+            <div class="anomaly-info">
+              <div class="anomaly-title">18644933  曼联 vs 阿森纳</div>
+              <div class="anomaly-tags">
+                <span class="anomaly-tag anomaly-tag-red">货量大 ¥500K</span>
+                <span class="anomaly-tag anomaly-tag-orange">单边超限 73%</span>
+              </div>
+              <div class="anomaly-meta">滚球 32'   英超</div>
+            </div>
+          </div>
+
+          <div class="anomaly-row" onclick="toggleCheckbox(this)">
+            <input type="checkbox" class="lock-item" onclick="event.stopPropagation()">
+            <div class="anomaly-info">
+              <div class="anomaly-title">18630060  巴萨 vs 皇马</div>
+              <div class="anomaly-tags">
+                <span class="anomaly-tag anomaly-tag-red">数据源延迟 8s</span>
+              </div>
+              <div class="anomaly-meta">滚球 15'   西甲</div>
+            </div>
+          </div>
+
+          <div class="anomaly-row" onclick="toggleCheckbox(this)">
+            <input type="checkbox" class="lock-item" onclick="event.stopPropagation()">
+            <div class="anomaly-info">
+              <div class="anomaly-title">18629931  AC 米兰 vs 国米</div>
+              <div class="anomaly-tags">
+                <span class="anomaly-tag anomaly-tag-yellow">IM 异常</span>
+              </div>
+              <div class="anomaly-meta">即将 8'   意甲</div>
+            </div>
+          </div>
+
+          <div class="anomaly-row" onclick="toggleCheckbox(this)">
+            <input type="checkbox" class="lock-item" onclick="event.stopPropagation()">
+            <div class="anomaly-info">
+              <div class="anomaly-title">18628855  拜仁 vs 多特</div>
+              <div class="anomaly-tags">
+                <span class="anomaly-tag anomaly-tag-orange">偏差大 +0.35</span>
+                <span class="anomaly-tag anomaly-tag-orange">单边超限 78%</span>
+              </div>
+              <div class="anomaly-meta">滚球 67'   德甲</div>
+            </div>
+          </div>
+
+          <div class="anomaly-row" onclick="toggleCheckbox(this)">
+            <input type="checkbox" class="lock-item" onclick="event.stopPropagation()">
+            <div class="anomaly-info">
+              <div class="anomaly-title">18627722  PSG vs 里昂</div>
+              <div class="anomaly-tags">
+                <span class="anomaly-tag anomaly-tag-red">货量大 ¥320K</span>
+              </div>
+              <div class="anomaly-meta">滚球 78'   法甲</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="anomaly-list-footer">
+          <span class="auto-refresh-indicator">自动刷新中（每 5 秒）</span>
+          <span>已选 <strong id="lockSelectedCount" style="color: var(--accent-red);">0</strong> / 5 场</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal(&#39;lockAllModal&#39;)">取消</button>
+        <button class="btn btn-danger" onclick="confirmLock()">🔒 锁定选中</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 锁定二次确认弹窗 -->
+  <div class="modal-overlay" id="lockConfirmModal" onclick="hideModalOnOverlay(event, &#39;lockConfirmModal&#39;)">
     <div class="modal">
       <div class="modal-header">
-        <h3 class="modal-title">🔒 一键锁盘确认</h3>
-        <button class="modal-close" onclick="hideModal(&#39;lockAllModal&#39;)">×</button>
+        <h3 class="modal-title">⚠️ 确认锁定 <span id="lockConfirmCount">0</span> 场赛事</h3>
+        <button class="modal-close" onclick="hideModal(&#39;lockConfirmModal&#39;)">×</button>
       </div>
       <div class="modal-body">
         <div class="modal-danger">
           <span>⚠️</span>
           <div>
-            <strong>锁定是高危操作，锁定后：</strong><br>
-            • 所有滚球赛事盘口将停止接受投注<br>
+            <strong>锁定后：</strong><br>
+            • 该赛事所有盘口将停止接受投注<br>
             • 数据源状态变更不会自动解锁<br>
             • 必须由主管或风控手动解锁
           </div>
         </div>
 
-        <div class="modal-info">
-          <div class="modal-info-row">
-            <span class="modal-info-label">将影响赛事</span>
-            <span class="modal-info-value" style="color:var(--accent-red);">8 场</span>
-          </div>
-          <div class="modal-info-row">
-            <span class="modal-info-label">当前总投注额</span>
-            <span class="modal-info-value">¥1,250,000</span>
-          </div>
+        <div style="margin-top: 12px;">
+          <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">
+            锁定原因（选填）：
+          </label>
+          <input type="text" id="lockReason" placeholder="例如：IM 数据源异常、单边货量过大..." 
+            style="width: 100%; padding: 8px 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 4px; color: var(--text-primary); font-size: 13px;">
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="hideModal(&#39;lockAllModal&#39;)">取消</button>
-        <button class="btn btn-danger" onclick="hideModal(&#39;lockAllModal&#39;); showToast(&#39;warning&#39;, &#39;已锁盘&#39;, &#39;所有滚球赛事已锁定&#39;)">确认锁盘</button>
+        <button class="btn btn-secondary" onclick="hideModal(&#39;lockConfirmModal&#39;)">取消</button>
+        <button class="btn btn-danger" onclick="hideModal(&#39;lockConfirmModal&#39;); showToast(&#39;warning&#39;, &#39;已锁定&#39;, document.getElementById(&#39;lockConfirmCount&#39;).textContent + &#39; 场赛事已锁定&#39;)">🔒 确认锁定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 一键解锁 - 已锁定赛事清单弹窗（v2.0 新增） -->
+  <div class="modal-overlay" id="unlockAllModal" onclick="hideModalOnOverlay(event, &#39;unlockAllModal&#39;)">
+    <div class="modal" style="width: 560px; max-width: 90vw;">
+      <div class="modal-header">
+        <h3 class="modal-title">🔓 一键解锁 - 已锁定赛事清单</h3>
+        <button class="modal-close" onclick="hideModal(&#39;unlockAllModal&#39;)">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-info" style="margin-bottom: 12px;">
+          <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
+            当前共有 <strong style="color: var(--accent-green);">3 场</strong> 赛事处于锁定状态，请勾选要解锁的赛事。
+          </div>
+        </div>
+
+        <div class="anomaly-list">
+          <div class="anomaly-list-header">
+            <input type="checkbox" id="unlockSelectAll" onchange="toggleSelectAll(&#39;unlockSelectAll&#39;, &#39;unlock-item&#39;)">
+            <label for="unlockSelectAll" style="cursor:pointer;">全选</label>
+          </div>
+
+          <div class="anomaly-row" onclick="toggleCheckbox(this)">
+            <input type="checkbox" class="unlock-item" onclick="event.stopPropagation()">
+            <div class="anomaly-info">
+              <div class="anomaly-title">18644933  曼联 vs 阿森纳</div>
+              <div class="anomaly-meta" style="color: var(--text-secondary); font-size: 12px;">
+                🔒 14:32 锁定 by 张主管<br>
+                原因：货量异常 ¥500K
+              </div>
+              <div class="anomaly-meta">滚球 32'   英超</div>
+            </div>
+          </div>
+
+          <div class="anomaly-row" onclick="toggleCheckbox(this)">
+            <input type="checkbox" class="unlock-item" onclick="event.stopPropagation()">
+            <div class="anomaly-info">
+              <div class="anomaly-title">18630060  巴萨 vs 皇马</div>
+              <div class="anomaly-meta" style="color: var(--text-secondary); font-size: 12px;">
+                🔒 14:35 锁定 by 张主管<br>
+                原因：数据源延迟
+              </div>
+              <div class="anomaly-meta">滚球 15'   西甲</div>
+            </div>
+          </div>
+
+          <div class="anomaly-row" onclick="toggleCheckbox(this)">
+            <input type="checkbox" class="unlock-item" onclick="event.stopPropagation()">
+            <div class="anomaly-info">
+              <div class="anomaly-title">18628855  拜仁 vs 多特</div>
+              <div class="anomaly-meta" style="color: var(--text-secondary); font-size: 12px;">
+                🔒 14:38 锁定 by 李风控<br>
+                原因：单边超限
+              </div>
+              <div class="anomaly-meta">滚球 67'   德甲</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="anomaly-list-footer">
+          <span class="auto-refresh-indicator">自动刷新中（每 5 秒）</span>
+          <span>已选 <strong id="unlockSelectedCount" style="color: var(--accent-green);">0</strong> / 3 场</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal(&#39;unlockAllModal&#39;)">取消</button>
+        <button class="btn btn-success" onclick="confirmUnlock()">🔓 解锁选中</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 解锁二次确认弹窗 -->
+  <div class="modal-overlay" id="unlockConfirmModal" onclick="hideModalOnOverlay(event, &#39;unlockConfirmModal&#39;)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">⚠️ 确认解锁 <span id="unlockConfirmCount">0</span> 场赛事</h3>
+        <button class="modal-close" onclick="hideModal(&#39;unlockConfirmModal&#39;)">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-danger" style="background: rgba(63, 185, 80, 0.1); border-color: rgba(63, 185, 80, 0.3);">
+          <span>⚠️</span>
+          <div>
+            <strong>解锁后：</strong><br>
+            • 这些赛事盘口将恢复接受投注<br>
+            • 解锁前请确认风险已消除
+          </div>
+        </div>
+
+        <div style="margin-top: 12px;">
+          <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">
+            解锁原因（<span style="color: var(--accent-red);">必填</span>）：
+          </label>
+          <input type="text" id="unlockReason" placeholder="例如：货量已平衡、IM 已恢复正常..." 
+            style="width: 100%; padding: 8px 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 4px; color: var(--text-primary); font-size: 13px;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal(&#39;unlockConfirmModal&#39;)">取消</button>
+        <button class="btn btn-success" onclick="doUnlock()">🔓 确认解锁</button>
       </div>
     </div>
   </div>
@@ -6097,6 +6423,78 @@
       setTimeout(() => {
         toast.remove();
       }, 4000);
+    }
+
+    // ========== 一键锁盘 / 一键解锁（v2.0 新增）==========
+    
+    // 点击行也能勾选 checkbox
+    function toggleCheckbox(row) {
+      const cb = row.querySelector('input[type="checkbox"]');
+      cb.checked = !cb.checked;
+      updateSelectCount();
+    }
+
+    // 全选 / 取消全选
+    function toggleSelectAll(headerId, itemClass) {
+      const header = document.getElementById(headerId);
+      const items = document.querySelectorAll('.' + itemClass);
+      items.forEach(item => item.checked = header.checked);
+      updateSelectCount();
+    }
+
+    // 更新已选数量
+    function updateSelectCount() {
+      const lockCount = document.querySelectorAll('.lock-item:checked').length;
+      const unlockCount = document.querySelectorAll('.unlock-item:checked').length;
+      const lockEl = document.getElementById('lockSelectedCount');
+      const unlockEl = document.getElementById('unlockSelectedCount');
+      if (lockEl) lockEl.textContent = lockCount;
+      if (unlockEl) unlockEl.textContent = unlockCount;
+    }
+
+    // 监听 checkbox 改变
+    document.addEventListener('change', function(e) {
+      if (e.target.matches('.lock-item, .unlock-item')) {
+        updateSelectCount();
+      }
+    });
+
+    // 一键锁盘 - 点「锁定选中」
+    function confirmLock() {
+      const count = document.querySelectorAll('.lock-item:checked').length;
+      if (count === 0) {
+        showToast('warning', '请先勾选', '请勾选要锁定的赛事');
+        return;
+      }
+      hideModal('lockAllModal');
+      document.getElementById('lockConfirmCount').textContent = count;
+      document.getElementById('lockReason').value = '';
+      showModal('lockConfirmModal');
+    }
+
+    // 一键解锁 - 点「解锁选中」
+    function confirmUnlock() {
+      const count = document.querySelectorAll('.unlock-item:checked').length;
+      if (count === 0) {
+        showToast('warning', '请先勾选', '请勾选要解锁的赛事');
+        return;
+      }
+      hideModal('unlockAllModal');
+      document.getElementById('unlockConfirmCount').textContent = count;
+      document.getElementById('unlockReason').value = '';
+      showModal('unlockConfirmModal');
+    }
+
+    // 解锁二次确认 - 点「确认解锁」（必填原因校验）
+    function doUnlock() {
+      const reason = document.getElementById('unlockReason').value.trim();
+      if (!reason) {
+        showToast('error', '请填写解锁原因', '解锁原因为必填，用于审计追责');
+        return;
+      }
+      const count = document.getElementById('unlockConfirmCount').textContent;
+      hideModal('unlockConfirmModal');
+      showToast('success', '已解锁', count + ' 场赛事已解锁');
     }
 
     // ========== 刷新列表 ==========

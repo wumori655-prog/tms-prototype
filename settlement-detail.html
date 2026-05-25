@@ -1158,35 +1158,6 @@
     .demo-switcher[hidden] { display: none; }
     .demo-switcher .label { font-size: 10px; color: var(--text-muted); align-self: center; }
 
-    /* 权限控制：按 body[data-role] 联动按钮可见性 */
-    /* 风控 / 财务：只读 — 隐藏所有操作按钮 */
-    body[data-role="risk"] .header-actions .btn,
-    body[data-role="finance"] .header-actions .btn,
-    body[data-role="risk"] .btn.warning,
-    body[data-role="finance"] .btn.warning,
-    body[data-role="risk"] .line-actions-cell .btn,
-    body[data-role="finance"] .line-actions-cell .btn,
-    body[data-role="risk"] .card-actions .btn.warning,
-    body[data-role="finance"] .card-actions .btn.warning,
-    body[data-role="risk"] #btnDataInput,
-    body[data-role="finance"] #btnDataInput,
-    body[data-role="risk"] .cancel-btn,
-    body[data-role="finance"] .cancel-btn,
-    body[data-role="risk"] .personnel-edit-icon,
-    body[data-role="finance"] .personnel-edit-icon { display: none !important; }
-
-    /* 运营主管 + 操盘手：可操作；财务仅看数据 */
-    body[data-role="risk"]::before,
-    body[data-role="finance"]::before {
-      content: "🔒 只读模式（风控/财务角色）";
-      position: fixed; top: 48px; left: 50%; transform: translateX(-50%);
-      background: var(--bg-tertiary); border: 1px solid var(--accent-orange); color: var(--accent-orange);
-      padding: 4px 10px; border-radius: 0 0 var(--radius-md) var(--radius-md);
-      font-size: 11px; z-index: 999;
-    }
-
-    /* 操盘手：不能分配结算人员（17.1）*/
-    body[data-role="trader"] .personnel-edit-icon { display: none !important; }
 
     /* ===== 辅助 ===== */
     [hidden] { display: none !important; }
@@ -1297,7 +1268,7 @@
     }
   </style>
 </head>
-<body data-scenario="normal" data-match-status="pending" data-match-finished="true" data-result-pulled="true" data-role="trader">
+<body data-scenario="normal" data-match-status="pending" data-match-finished="true" data-result-pulled="true">
   <script>
     // URL 参数驱动 demo 场景切换（?matchId=M003&scene=abnormal 从列表异常注单跳转时切换到腰斩暂缓态）
     (function(){
@@ -1392,12 +1363,6 @@
       <div class="topbar-right">
         <span class="alert-chip" title="3 个告警">⚠️ 3</span>
         <span class="source-chip">● 数据源正常</span>
-        <select class="btn ghost xs" id="roleSelector" onchange="switchRole(this.value)" title="切换当前角色" style="padding:4px 8px;">
-          <option value="trader" selected>👤 操盘手</option>
-          <option value="manager">👥 运营主管</option>
-          <option value="risk">🛡 风控人员</option>
-          <option value="finance">💰 财务人员</option>
-        </select>
         <button class="btn ghost xs" title="刷新当前赛事：重拉 IM 最新比分 + 盘口状态 + 注单聚合数据（不会丢失未提交的录入内容；若检测到远端已变动会弹窗提示冲突）" onclick="alert('演示：刷新当前赛事数据\n\n实际行为：\n1. 重拉 IM GetEventInfoMBT（比分 + 盘口状态）\n2. 聚合本地注单数据\n3. 保留未提交的录入（比分补录、结果选择）\n4. 若远端状态已变更 → 弹窗提示冲突，由用户选择覆盖或放弃')">🔄 刷新</button>
       </div>
     </header>
@@ -5314,13 +5279,6 @@
       }
       // 7.7 matchStatus 切换时联动所有已结算盘口的二次结算按钮
       updateRejectButtons();
-    }
-
-    // 角色切换（权限控制）
-    function switchRole(role) {
-      document.body.dataset.role = role;
-      const names = { trader: '操盘手', manager: '运营主管', risk: '风控人员', finance: '财务人员' };
-      appendRejectLog('角色切换', '当前角色：' + names[role] + '（影响按钮可见性，按权限矩阵控制）');
     }
 
     // ---------- 盘口状态流程演示（状态机驱动） ----------

@@ -456,22 +456,27 @@
       max-width: 360px;
     }
 
-    /* === v2 改动：演示态切换按钮（放在 Tab 右侧） === */
+    /* === v2 改动：演示态切换按钮（固定在右下角浮窗，确保不被遮挡） === */
     .demo-empty-toggle {
-      position: absolute;
-      top: -36px;
-      right: 0;
-      padding: 4px 10px;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 16px;
       background: var(--accent-orange);
       color: #fff;
       border: none;
-      border-radius: 4px;
-      font-size: 11px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
-      opacity: 0.85;
-      z-index: 10;
+      opacity: 0.95;
+      z-index: 9999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: none;
     }
-    .demo-empty-toggle:hover { opacity: 1; }
+    .demo-empty-toggle:hover { opacity: 1; transform: translateY(-2px); }
+    /* 只有当前激活的 Tab 内的按钮才显示 */
+    .markets:not([hidden]) .demo-empty-toggle { display: block; }
 
     .market-card {
       background: var(--bg-secondary);

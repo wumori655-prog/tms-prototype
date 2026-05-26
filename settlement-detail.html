@@ -423,8 +423,55 @@
     }
 
     /* ===== 盘口卡片统一骨架 market-card（第 7 章） ===== */
-    .markets { display: flex; flex-direction: column; gap: 10px; }
+    .markets { display: flex; flex-direction: column; gap: 10px; position: relative; }
     .markets[hidden] { display: none; }
+
+    /* === v2 改动：无注单卡片自动隐藏 === */
+    .market-card[data-no-bets="true"] { display: none !important; }
+
+    /* === v2 改动：Tab 整体空状态（整个 Tab 无注单时显示） === */
+    .empty-state-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 40px;
+      background: var(--bg-secondary);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-lg);
+      gap: 16px;
+      min-height: 320px;
+    }
+    .empty-state-container svg { width: 140px; height: 140px; opacity: 0.55; }
+    .empty-state-container .empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .empty-state-container .empty-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      text-align: center;
+      max-width: 360px;
+    }
+
+    /* === v2 改动：演示态切换按钮（放在 Tab 右侧） === */
+    .demo-empty-toggle {
+      position: absolute;
+      top: -36px;
+      right: 0;
+      padding: 4px 10px;
+      background: var(--accent-orange);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      opacity: 0.85;
+      z-index: 10;
+    }
+    .demo-empty-toggle:hover { opacity: 1; }
 
     .market-card {
       background: var(--bg-secondary);
@@ -1589,6 +1636,23 @@
         <!-- ===== 本地 Tab 内容 ===== -->
         <div class="markets" id="marketsLocal">
 
+          <!-- v2 改动:演示态切换按钮 -->
+          <button class="demo-empty-toggle" onclick="toggleDemoEmpty('local')">🔄 演示空态切换</button>
+
+          <!-- v2 改动:整 Tab 空状态(默认隐藏,演示用) -->
+          <div class="empty-state-container" id="emptyStateLocal" style="display:none;">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" fill="none">
+              <rect x="40" y="60" width="120" height="100" rx="8" stroke="currentColor" stroke-width="3" stroke-dasharray="6 4" opacity="0.5"/>
+              <path d="M 40 75 L 80 75 L 90 65 L 160 65" stroke="currentColor" stroke-width="3" fill="none" opacity="0.5"/>
+              <circle cx="120" cy="120" r="22" stroke="currentColor" stroke-width="3.5" fill="none"/>
+              <line x1="138" y1="138" x2="155" y2="155" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+              <text x="100" y="130" font-size="20" fill="currentColor" font-family="Arial" font-weight="bold" text-anchor="middle" opacity="0.4">?</text>
+            </svg>
+            <div class="empty-title">该赛事暂无注单</div>
+            <div class="empty-subtitle">还没有玩家投注此赛事的可操盘盘口。结算人员无需处理,可切换至其他赛事或等待赛事产生注单。</div>
+          </div>
+
+
           <!-- 分组锚点：全场类 FT（录入按钮已迁至筛选行 · 方案 A） -->
           <h3 id="group-full" style="margin:16px 0 8px;padding:8px 12px;font-size:13px;color:var(--accent-green);border-left:3px solid var(--accent-green);background:rgba(63,185,80,0.08);border-radius:3px;">
             🏁 全场类 (FT · Full Time · 90 分钟结束后结算) · BT1 / BT2 / BT3 / BT5 / BT6 / BT7 / BT8 / BT158 / BT160 / BT161
@@ -2432,6 +2496,23 @@
 
         <!-- ===== 数据源 Tab 内容 ===== -->
         <div class="markets" id="marketsDatasource" hidden>
+
+          <!-- v2 改动:演示态切换按钮 -->
+          <button class="demo-empty-toggle" onclick="toggleDemoEmpty('datasource')">🔄 演示空态切换</button>
+
+          <!-- v2 改动:整 Tab 空状态(默认隐藏,演示用) -->
+          <div class="empty-state-container" id="emptyStateDatasource" style="display:none;">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" fill="none">
+              <rect x="40" y="60" width="120" height="100" rx="8" stroke="currentColor" stroke-width="3" stroke-dasharray="6 4" opacity="0.5"/>
+              <path d="M 40 75 L 80 75 L 90 65 L 160 65" stroke="currentColor" stroke-width="3" fill="none" opacity="0.5"/>
+              <circle cx="120" cy="120" r="22" stroke="currentColor" stroke-width="3.5" fill="none"/>
+              <line x1="138" y1="138" x2="155" y2="155" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+              <text x="100" y="130" font-size="20" fill="currentColor" font-family="Arial" font-weight="bold" text-anchor="middle" opacity="0.4">?</text>
+            </svg>
+            <div class="empty-title">该赛事暂无注单</div>
+            <div class="empty-subtitle">还没有玩家投注此赛事的数据源盘口。结算人员无需处理,可切换至其他赛事或等待赛事产生注单。</div>
+          </div>
+
 
           <!-- 数据源盘口：IM 正常 · 只读（常规态）-->
           <article class="market-card" data-bt="ds_card" data-renderer="single" data-status="settled" data-phase="live" data-period="FT">
@@ -5397,6 +5478,114 @@
     document.addEventListener('DOMContentLoaded', renderFlowState);
 
     // ---------- Tab 切换 / 过滤 ----------
+    // ===== v2 改动:演示空态切换 =====
+    function toggleDemoEmpty(which) {
+      const containerId = which === 'local' ? 'marketsLocal' : 'marketsDatasource';
+      const emptyId = which === 'local' ? 'emptyStateLocal' : 'emptyStateDatasource';
+      const container = document.getElementById(containerId);
+      const emptyEl = document.getElementById(emptyId);
+      const cards = container.querySelectorAll('.market-card');
+      const groups = container.querySelectorAll('h3[id^="group-"]');
+      // 判断当前是不是已经是空态
+      const isEmpty = emptyEl.style.display !== 'none';
+      if (isEmpty) {
+        // 恢复:显示卡片 + 隐藏空态
+        emptyEl.style.display = 'none';
+        cards.forEach(c => c.style.display = '');
+        groups.forEach(g => g.style.display = '');
+      } else {
+        // 进入空态:隐藏所有卡片和分组锚点
+        emptyEl.style.display = '';
+        cards.forEach(c => c.style.display = 'none');
+        groups.forEach(g => g.style.display = 'none');
+      }
+    }
+
+    // ===== v2 改动:自动给所有盘口卡片表格注入 [主队比分] [客队比分] 2 列 =====
+    function injectScoreColumns() {
+      const cards = document.querySelectorAll('.market-card');
+      cards.forEach(card => {
+        const tables = card.querySelectorAll('.renderer-body table');
+        tables.forEach(table => {
+          // 1. 改 thead:在 "投注额" 后插入 2 个新表头
+          const thead = table.querySelector('thead tr');
+          if (!thead) return;
+          if (thead.dataset.scoreInjected === '1') return; // 防重复
+          const headerCells = thead.querySelectorAll('th');
+          let investIdx = -1;
+          headerCells.forEach((th, i) => {
+            if (th.textContent.includes('投注额')) investIdx = i;
+          });
+          if (investIdx === -1) return;
+          
+          // 在 investIdx + 1 位置插入两个新表头
+          const thHome = document.createElement('th');
+          thHome.style.width = '70px';
+          thHome.innerHTML = '主队比分';
+          thHome.title = '投注时主队比分(赛前默认为 0,开赛后按实时记录)';
+          const thAway = document.createElement('th');
+          thAway.style.width = '70px';
+          thAway.innerHTML = '客队比分';
+          thAway.title = '投注时客队比分(赛前默认为 0,开赛后按实时记录)';
+          if (investIdx + 1 < headerCells.length) {
+            thead.insertBefore(thHome, headerCells[investIdx + 1]);
+            thead.insertBefore(thAway, headerCells[investIdx + 1]);
+          } else {
+            thead.appendChild(thHome);
+            thead.appendChild(thAway);
+          }
+          thead.dataset.scoreInjected = '1';
+
+          // 2. 改 tbody:每行在投注额列后插入两个数据 cell
+          // 由于不同卡片的表格结构(rowspan/multi-line)很复杂,这里只针对【主数据行】注入
+          // 用 data-phase 决定演示数据:赛前 → 0/0,滚球 → 模拟当时比分
+          const phase = card.dataset.phase || 'live';
+          const tbody = table.querySelector('tbody');
+          if (!tbody) return;
+          const rows = tbody.querySelectorAll('tr');
+          rows.forEach(row => {
+            // 跳过非数据行(明细展开行 / 备注行)
+            if (row.classList.contains('mg-inline-details-row')) return;
+            // 找到该行的 .amount 单元格(投注额列)
+            const amountCell = row.querySelector('td.amount:not(.payout)');
+            if (!amountCell) return;
+            // 计算演示数据
+            // 赛前:0/0
+            // 滚球:模拟一个投注时比分(用 hash 演示多样化:0/0, 1/0, 1/1, 2/1...)
+            let homeScore = 0, awayScore = 0;
+            if (phase === 'live') {
+              // 用 BT 编号 + 行索引做伪随机
+              const bt = card.dataset.bt || '';
+              const seed = (bt.length + Array.from(row.querySelectorAll('td')).length) % 5;
+              const scoreOptions = [[0,0],[1,0],[1,1],[2,1],[0,1]];
+              [homeScore, awayScore] = scoreOptions[seed];
+            }
+            const tdHome = document.createElement('td');
+            tdHome.className = 'mono';
+            tdHome.style.textAlign = 'center';
+            tdHome.style.color = phase === 'live' ? 'var(--text-primary)' : 'var(--text-muted)';
+            tdHome.textContent = homeScore;
+            const tdAway = document.createElement('td');
+            tdAway.className = 'mono';
+            tdAway.style.textAlign = 'center';
+            tdAway.style.color = phase === 'live' ? 'var(--text-primary)' : 'var(--text-muted)';
+            tdAway.textContent = awayScore;
+            // 插入到 amountCell 之后
+            if (amountCell.nextSibling) {
+              row.insertBefore(tdHome, amountCell.nextSibling);
+              row.insertBefore(tdAway, amountCell.nextSibling.nextSibling);
+            } else {
+              row.appendChild(tdHome);
+              row.appendChild(tdAway);
+            }
+          });
+        });
+      });
+      // 跨行(rowspan)的 colspan 类的 mg 明细行不会受影响,因为是注入到正常的 td 序列
+    }
+    // 页面加载完成自动注入
+    document.addEventListener('DOMContentLoaded', injectScoreColumns);
+
     function switchMarketTab(tab) {
       document.querySelectorAll('.market-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
       document.getElementById('marketsLocal').hidden = tab !== 'local';

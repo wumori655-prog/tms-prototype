@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TMS 操盘系统 · 原型导航</title>
+<style>
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --border: #30363d;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --accent-blue: #2f81f7;
+    --accent-green: #3fb950;
+    --accent-orange: #d29922;
+    --accent-purple: #a371f7;
+    --accent-red: #f85149;
+    --accent-cyan: #39d3bb;
+    --accent-pink: #db61a2;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(47, 129, 247, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(63, 185, 80, 0.06) 0%, transparent 50%);
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 40px;
+  }
+
+  /* === Header === */
+  .header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .logo-mark {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    color: #fff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    box-shadow: 0 4px 16px rgba(47, 129, 247, 0.4);
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #e6edf3 0%, #8b949e 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-top: 12px;
+    line-height: 1.7;
+  }
+
+  /* === Section === */
+  .section {
+    margin-bottom: 48px;
+  }
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    padding-left: 4px;
+    border-left: 3px solid var(--accent-blue);
+    padding: 4px 0 4px 12px;
+  }
+
+  /* === Grid === */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  /* === Card === */
+  .card {
+    display: block;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--card-color, var(--accent-blue));
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 0.2s ease;
+  }
+  .card:hover {
+    border-color: var(--card-color, var(--accent-blue));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    background: var(--bg-tertiary);
+  }
+  .card:hover::before {
+    transform: scaleY(1);
+  }
+
+  .card-icon {
+    font-size: 24px;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .card-tag {
+    padding: 2px 8px;
+    background: rgba(47, 129, 247, 0.1);
+    color: var(--accent-blue);
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .card-tag.green { background: rgba(63, 185, 80, 0.1); color: var(--accent-green); }
+  .card-tag.orange { background: rgba(210, 153, 34, 0.1); color: var(--accent-orange); }
+  .card-tag.purple { background: rgba(163, 113, 247, 0.1); color: var(--accent-purple); }
+  .card-tag.cyan { background: rgba(57, 211, 187, 0.1); color: var(--accent-cyan); }
+  .card-tag.pink { background: rgba(219, 97, 162, 0.1); color: var(--accent-pink); }
+  .card-tag.red { background: rgba(248, 81, 73, 0.1); color: var(--accent-red); }
+
+  /* === Footer === */
+  .footer {
+    margin-top: 60px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.8;
+  }
+  .footer a {
+    color: var(--accent-blue);
+    text-decoration: none;
+  }
+  .footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    .container { padding: 40px 20px; }
+    h1 { font-size: 24px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- === Header === -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-mark">OP</div>
+      <h1>TMS 操盘系统 · 原型导航</h1>
+    </div>
+    <div class="subtitle">
+      点击下方卡片查看对应模块的 UI 原型 · 演示用,非生产环境
+    </div>
+  </div>
+
+  <!-- === Section 1: 主流程 === -->
+  <div class="section">
+    <div class="section-title">📋 主流程模块</div>
+    <div class="grid">
+
+      <a href="league-management.html" class="card" style="--card-color: var(--accent-blue);">
+        <span class="card-icon">🏆</span>
+        <div class="card-title">联赛管理</div>
+        <div class="card-desc">联赛级配置中心,联赛状态、是否跟随数据源、串关支持等</div>
+        <div class="card-meta">
+          <span class="card-tag">配置层</span>
+        </div>
+      </a>
+
+      <a href="trading-list.html" class="card" style="--card-color: var(--accent-green);">
+        <span class="card-icon">📋</span>
+        <div class="card-title">操盘列表</div>
+        <div class="card-desc">操盘工作台主页,赛事列表 + 筛选 + 批量操作 + 状态管理</div>
+        <div class="card-meta">
+          <span class="card-tag green">列表页</span>
+        </div>
+      </a>
+
+      <a href="Trading-Detail.html" class="card" style="--card-color: var(--accent-purple);">
+        <span class="card-icon">⚙️</span>
+        <div class="card-title">操盘详情</div>
+        <div class="card-desc">单赛事操盘工作台,盘口卡片 + 赔率编辑 + 数据源开关</div>
+        <div class="card-meta">
+          <span class="card-tag purple">详情页</span>
+        </div>
+      </a>
+
+      <a href="Trading-Detail 2.html" class="card" style="--card-color: var(--accent-purple);">
+        <span class="card-icon">⚙️</span>
+        <div class="card-title">操盘详情 v2</div>
+        <div class="card-desc">操盘详情第二版本,UI 改造版</div>
+        <div class="card-meta">
+          <span class="card-tag purple">详情页 v2</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- === Section 2: 结算流程 === -->
+  <div class="section">
+    <div class="section-title">💰 结算流程</div>
+    <div class="grid">
+
+      <a href="settlement-management.html" class="card" style="--card-color: var(--accent-orange);">
+        <span class="card-icon">💰</span>
+        <div class="card-title">结算管理</div>
+        <div class="card-desc">结算工作台主页,赛事视图 + 注单视图 + 批量操作</div>
+        <div class="card-meta">
+          <span class="card-tag orange">列表页</span>
+        </div>
+      </a>
+
+      <a href="settlement-list.html" class="card" style="--card-color: var(--accent-orange);">
+        <span class="card-icon">📃</span>
+        <div class="card-title">结算列表</div>
+        <div class="card-desc">结算赛事列表视图,辅助快捷切换</div>
+        <div class="card-meta">
+          <span class="card-tag orange">列表页</span>
+        </div>
+      </a>
+
+      <a href="settlement-detail.html" class="card" style="--card-color: var(--accent-cyan);">
+        <span class="card-icon">📊</span>
+        <div class="card-title">结算详情 <span class="card-tag cyan">v2 改造</span></div>
+        <div class="card-desc">单赛事结算工作台 v2 改造版 · 仅展示有注单的盘口 + 主队/客队比分字段</div>
+        <div class="card-meta">
+          <span class="card-tag cyan">详情页 v2</span>
+        </div>
+      </a>
+
+      <a href="settlement-report.html" class="card" style="--card-color: var(--accent-pink);">
+        <span class="card-icon">📈</span>
+        <div class="card-title">结算报表</div>
+        <div class="card-desc">结算明细统计 + 导出 + 异常处理</div>
+        <div class="card-meta">
+          <span class="card-tag pink">报表页</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- === Section 3: 风控 === -->
+  <div class="section">
+    <div class="section-title">🛡️ 风控模块</div>
+    <div class="grid">
+
+      <a href="risk-management.html" class="card" style="--card-color: var(--accent-red);">
+        <span class="card-icon">🛡️</span>
+        <div class="card-title">风控管理</div>
+        <div class="card-desc">赛事限额 + 用户限额 + 玩法限额 + 串关限额 + 告警阈值</div>
+        <div class="card-meta">
+          <span class="card-tag red">配置层</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- === Footer === -->
+  <div class="footer">
+    <div>📦 TMS 操盘系统原型站 · 用于产品/开发/测试团队评审 UI 设计</div>
+    <div style="margin-top: 8px;">
+      产品文档:<a href="https://tms-documentation.netlify.app/" target="_blank">tms-documentation.netlify.app</a> · 
+      运营 SOP:<a href="https://userguidetms.netlify.app/" target="_blank">userguidetms.netlify.app</a>
+    </div>
+    <div style="margin-top: 8px; opacity: 0.6;">
+      Last updated: 2026-05-27
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
